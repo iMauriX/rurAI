@@ -85,3 +85,50 @@ export const refresh = (req, res, next) => {
     next(error);
   }
 };
+
+export const getProfile = (req, res, next) => {
+  try {
+    const user = req.user;
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProfile = (req, res, next) => {
+  try {
+    const user = req.user;
+    const { nombre, apellido, correo, password } = req.body;
+
+    if (nombre) user.nombre = nombre;
+    if (apellido) user.apellido = apellido;
+    if (correo) {
+      const exists = db.usuarios.find(u => u.correo === correo && u.id !== user.id);
+      if (exists) {
+        return res.status(409).json({ error: 'El correo ya está en uso' });
+      }
+      user.correo = correo;
+    }
+    if (password) user.password = password;
+
+    res.status(200).json({ status: 'success', user });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePlan = (req, res, next) => {
+  try {
+    const user = req.user;
+    const { plan } = req.body;
+
+    if (!['Free', 'Pro', 'Institucional'].includes(plan)) {
+      return res.status(400).json({ error: 'Plan no válido' });
+    }
+
+    user.plan = plan;
+    res.status(200).json({ status: 'success', user });
+  } catch (error) {
+    next(error);
+  }
+};
