@@ -1,30 +1,49 @@
 # RurAI - MVP (Producto Mínimo Viable)
 
-RurAI es una plataforma educativa gamificada diseñada para docentes de secundaria en Perú. Permite la creación y personalización de experiencias lúdicas basadas en el Currículo Nacional de Educación Básica. 
+RurAI es una plataforma educativa gamificada diseñada para docentes de secundaria en Perú. Permite la creación y personalización de experiencias lúdicas basadas en el Currículo Nacional de Educación Básica de manera rápida e intuitiva.
 
 Este repositorio contiene la implementación del **MVP (Producto Mínimo Viable)** con persistencia en memoria y datos mockeados para agilizar las pruebas y el despliegue inicial.
 
 ---
 
-## 🚀 Requisitos Previos
+## 🎯 El Problema que Resuelve
 
+El proyecto aborda principalmente **el desinterés y la falta de motivación de los estudiantes en secundaria**. Para solucionar esto, RurAI facilita a los docentes la creación de herramientas de gamificación interactivas y atractivas, todo ello sin requerir conocimientos técnicos previos por parte del profesorado.
+
+---
+
+## 💻 Stack Tecnológico
+
+La aplicación sigue una arquitectura **Cliente-Servidor (SPA - Single Page Application)** y utiliza las siguientes tecnologías:
+
+- **Frontend:**
+  - [React](https://reactjs.org/) - Biblioteca para construir interfaces de usuario.
+  - [Vite](https://vitejs.dev/) - Entorno de desarrollo rápido.
+  - [Tailwind CSS](https://tailwindcss.com/) - Framework de utilidades para estilos ágiles y responsivos.
+- **Backend:**
+  - [Node.js](https://nodejs.org/) - Entorno de ejecución para JavaScript.
+  - [Express](https://expressjs.com/) - Framework web para crear la API REST.
+- **Integración IA (Producción):**
+  - Actualmente, la generación de contenido en el MVP es simulada con latencia y plantillas para mayor agilidad, pero la arquitectura está preparada para integrarse con modelos reales como **OpenAI (GPT)** en futuras versiones.
+
+---
+
+## ✨ Características Principales
+
+1. **Generación de minijuegos educativos mediante IA:** Creación de dinámicas interactivas como Duelo de Decisiones (RPG), Clasificador Defensivo (TD) y Simuladores de Destino.
+2. **Alineación con el Currículo Nacional:** Los contenidos generados están directamente vinculados al Currículo Nacional de Educación Básica de Perú.
+3. **Acceso rápido para estudiantes:** Los alumnos no necesitan registrarse; acceden a los minijuegos generados directamente mediante un código de 6 caracteres.
+4. **Exportación de reportes:** Permite a los docentes descargar reportes y planificadores de las actividades en formato Word (.docx).
+
+---
+
+## 🛠️ Guía de Instalación y Ejecución
+
+### Requisitos Previos
 - [Node.js](https://nodejs.org/) (versión 18 o superior recomendada)
-- [npm](https://www.npmjs.com/) (generalmente viene con Node.js)
-
----
-
-## 📁 Estructura del Proyecto
-
-El proyecto está dividido en dos partes principales ubicadas en la carpeta `rurai-mvp/`:
-- `backend/`: API REST construida con Node.js + Express.
-- `frontend/`: Aplicación de una sola página (SPA) construida con React + Vite + TailwindCSS.
-
----
-
-## 🛠️ Instrucciones de Instalación y Ejecución
+- npm (generalmente viene con Node.js)
 
 ### 1. Levantar el Backend (Puerto 3000)
-
 1. Dirígete a la carpeta del backend:
    ```bash
    cd rurai-mvp/backend
@@ -40,7 +59,6 @@ El proyecto está dividido en dos partes principales ubicadas en la carpeta `rur
    *El servidor correrá en `http://localhost:3000`.*
 
 ### 2. Levantar el Frontend
-
 1. Abre una nueva terminal y dirígete a la carpeta del frontend:
    ```bash
    cd rurai-mvp/frontend
@@ -57,36 +75,31 @@ El proyecto está dividido en dos partes principales ubicadas en la carpeta `rur
 
 ---
 
-## 📝 Credenciales de Prueba (Datos Mockeados)
+## 🎮 Flujos de Usuario (Docente / Estudiante)
 
-El backend cuenta con los siguientes usuarios predefinidos en memoria (`database.js`) para que puedas iniciar sesión de inmediato:
-
+### Credenciales de Prueba (Docente)
+El backend cuenta con los siguientes usuarios en memoria para iniciar sesión:
 | Correo | Contraseña | Plan | Rol |
 | :--- | :--- | :--- | :--- |
 | `carlos@mail.com` | `123456` | Free | Docente |
 | `ana@mail.com` | `123456` | Free | Docente |
 
----
-
-## 🧪 Pruebas del Sistema
-
 ### Flujo del Docente (Dashboard)
 1. Inicia sesión con cualquiera de los usuarios mockeados.
 2. Explora el **Historial de Actividades**.
-3. Selecciona un tema curricular, grado, área, y elige uno de los tres motores de juego disponibles:
-   - **Duelo de Decisiones (RPG):** Combate por turnos respondiendo preguntas.
-   - **Clasificador Defensivo (TD):** Arrastrar y soltar conceptos en zonas correspondientes.
-   - **Simulador de Destino (SIM):** Gestión de recursos basada en la toma de decisiones.
-4. Genera el juego y obtén el **código de 6 caracteres** (ej. `ABC123`) o enlace corto.
-5. Puedes exportar el reporte/planificador de la actividad en formato `.docx` (Mock).
+3. Selecciona un tema curricular, grado, área, y elige uno de los tres motores de juego.
+4. Genera el juego y obtén el **código de 6 caracteres** (ej. `ABC123`) o un enlace corto.
+5. *(Opcional)* Exporta el reporte de la actividad en formato `.docx`.
 
 ### Flujo del Estudiante (Modo Juego)
-1. Accede directamente mediante la URL `/play/:token` (donde `:token` es el código de 6 caracteres generado, ej. `/play/ABC123`).
-2. El estudiante no necesita registrarse ni iniciar sesión; jugará directamente en el navegador.
+1. El estudiante recibe el código del docente.
+2. Accede a la URL del juego (ej. `/play/ABC123`).
+3. El estudiante juega directamente desde su navegador sin iniciar sesión.
 
 ---
 
-## 🔒 Restricciones Técnicas del MVP
-- **Persistencia Temporal:** Toda la información se guarda en memoria volátil en el backend. Si el servidor se reinicia, los datos volverán a su estado inicial.
-- **Límite Freemium:** Cada docente tiene un límite máximo de 15 generaciones al mes en su plan gratuito.
-- **Simulación de IA:** La creación de contenido utiliza plantillas y latencia simulada (`setTimeout`) para recrear el comportamiento de un modelo LLM de forma rápida y gratuita.
+## 🚀 Siguientes Pasos (Roadmap)
+Al ser un MVP, el proyecto cuenta con ciertas limitaciones (como persistencia en memoria y simulaciones) que serán abordadas en los próximos hitos:
+- **Integrar bases de datos reales:** Migrar a una solución de base de datos robusta (como PostgreSQL o MongoDB).
+- **Implementar IA generativa real:** Conectar la plataforma a APIs de modelos grandes de lenguaje (ej. OpenAI) para la creación dinámica y genuina del contenido de los minijuegos.
+- **Añadir más tipos de juegos:** Expandir la biblioteca de plantillas y motores de juego para diversificar la experiencia educativa.
