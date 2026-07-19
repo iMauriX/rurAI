@@ -312,11 +312,11 @@ const Dashboard = () => {
     borderRadius: 12,
     fontSize: 14,
     fontWeight: 600,
-    color: activeTab === tab ? '#6366f1' : '#64748b',
-    background: activeTab === tab ? '#f0f2ff' : 'transparent',
+    color: activeTab === tab ? '#a5b4fc' : '#94a3b8',
+    background: activeTab === tab ? 'rgba(99, 102, 241, 0.12)' : 'transparent',
     border: 'none',
     cursor: 'pointer',
-    transition: 'all 0.15s ease',
+    transition: 'all 0.2s ease',
     textAlign: 'left',
   });
 
@@ -330,8 +330,8 @@ const Dashboard = () => {
       {/* ── Sidebar Navigation ── */}
       <aside style={{
         width: 280,
-        background: '#fff',
-        borderRight: '1px solid #e2e8f0',
+        background: '#0b0f19',
+        borderRight: '1px solid rgba(255, 255, 255, 0.06)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -340,6 +340,7 @@ const Dashboard = () => {
         top: 0,
         height: '100vh',
         boxSizing: 'border-box',
+        zIndex: 10
       }}>
         <div>
           {/* Logo */}
@@ -351,7 +352,7 @@ const Dashboard = () => {
             }}>
               <Sparkles style={{ color: '#fff', width: 20, height: 20 }} />
             </div>
-            <span style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>
               RurAI
             </span>
           </div>
@@ -360,22 +361,22 @@ const Dashboard = () => {
           {user && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 14px', background: '#f8fafc', borderRadius: 14,
-              marginBottom: 24, border: '1px solid #f1f5f9'
+              padding: '12px 14px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 14,
+              marginBottom: 24, border: '1px solid rgba(255, 255, 255, 0.08)'
             }}>
               <div style={{
                 width: 40, height: 40, borderRadius: '50%',
-                background: '#6366f1', color: '#fff',
+                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 700, fontSize: 15
               }}>
                 {(user.nombre?.[0] || 'D').toUpperCase()}{(user.apellido?.[0] || 'C').toUpperCase()}
               </div>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {user.nombre || 'Docente'} {user.apellido || ''}
                 </p>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Plan {currentPlan}
                 </span>
               </div>
@@ -384,19 +385,39 @@ const Dashboard = () => {
 
           {/* Navigation Links */}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <button onClick={() => setActiveTab('dashboard')} style={sidebarItemStyle('dashboard')}>
+            <button 
+              onClick={() => setActiveTab('dashboard')} 
+              style={sidebarItemStyle('dashboard')}
+              onMouseEnter={e => { if(activeTab !== 'dashboard') e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+              onMouseLeave={e => { if(activeTab !== 'dashboard') e.currentTarget.style.background = 'transparent'; }}
+            >
               <BarChart3 style={{ width: 18, height: 18 }} />
               Dashboard
             </button>
-            <button onClick={() => setActiveTab('generar')} style={sidebarItemStyle('generar')}>
+            <button 
+              onClick={() => setActiveTab('generar')} 
+              style={sidebarItemStyle('generar')}
+              onMouseEnter={e => { if(activeTab !== 'generar') e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+              onMouseLeave={e => { if(activeTab !== 'generar') e.currentTarget.style.background = 'transparent'; }}
+            >
               <Zap style={{ width: 18, height: 18 }} />
-              Generacion de Actividades
+              Generar y Mis Actividades
             </button>
-            <button onClick={() => setActiveTab('cuenta')} style={sidebarItemStyle('cuenta')}>
+            <button 
+              onClick={() => setActiveTab('cuenta')} 
+              style={sidebarItemStyle('cuenta')}
+              onMouseEnter={e => { if(activeTab !== 'cuenta') e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+              onMouseLeave={e => { if(activeTab !== 'cuenta') e.currentTarget.style.background = 'transparent'; }}
+            >
               <Settings style={{ width: 18, height: 18 }} />
               Mi Cuenta
             </button>
-            <button onClick={() => setActiveTab('pricing')} style={sidebarItemStyle('pricing')}>
+            <button 
+              onClick={() => setActiveTab('pricing')} 
+              style={sidebarItemStyle('pricing')}
+              onMouseEnter={e => { if(activeTab !== 'pricing') e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+              onMouseLeave={e => { if(activeTab !== 'pricing') e.currentTarget.style.background = 'transparent'; }}
+            >
               <CreditCard style={{ width: 18, height: 18 }} />
               Planes & Precios
             </button>
@@ -407,21 +428,21 @@ const Dashboard = () => {
         <div>
           {/* Freemium Limits Box */}
           <div style={{
-            background: '#fafafa', border: '1px solid #f1f5f9',
+            background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.06)',
             borderRadius: 16, padding: 16, marginBottom: 20
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Uso mensual</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8' }}>Uso mensual</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>
                 {currentGenerations} / {maxGenerations === Infinity ? '∞' : maxGenerations}
               </span>
             </div>
             {maxGenerations !== Infinity && (
-              <div style={{ width: '100%', height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden', marginBottom: 12 }}>
+              <div style={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden', marginBottom: 12 }}>
                 <div style={{
                   width: `${Math.min(100, (currentGenerations / maxGenerations) * 100)}%`,
                   height: '100%',
-                  background: currentGenerations >= maxGenerations ? '#ef4444' : '#6366f1',
+                  background: currentGenerations >= maxGenerations ? '#ef4444' : 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
                   borderRadius: 3,
                   transition: 'width 0.3s ease'
                 }} />
@@ -431,13 +452,13 @@ const Dashboard = () => {
               <button
                 onClick={() => setActiveTab('pricing')}
                 style={{
-                  width: '100%', background: '#fff', border: '1px solid #6366f1',
-                  color: '#6366f1', padding: '6px 0', borderRadius: 8,
+                  width: '100%', background: 'transparent', border: '1px solid #6366f1',
+                  color: '#818cf8', padding: '6px 0', borderRadius: 8,
                   fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.25s ease'
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = '#6366f1'; e.currentTarget.style.color = '#fff'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#6366f1'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#818cf8'; }}
               >
                 Subir de nivel
               </button>
@@ -452,9 +473,9 @@ const Dashboard = () => {
               background: 'none', border: 'none', width: '100%',
               padding: '10px 14px', borderRadius: 10,
               fontSize: 14, fontWeight: 600, color: '#ef4444',
-              cursor: 'pointer', transition: 'all 0.15s ease'
+              cursor: 'pointer', transition: 'all 0.25s ease'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             <LogOut style={{ width: 18, height: 18 }} />
