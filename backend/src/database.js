@@ -34,7 +34,7 @@ export const db = {
       dataIa: { 
         personajes: [{ nombre: 'Héroe', hp: 100 }, { nombre: 'Dragón', hp: 80 }], 
         escenas: [
-          { pregunta: '¿Cuánto es 1/2 + 1/4?', opciones: ['1/6', '3/4', '2/6'], respuesta: 1 },
+          { pregunta: '¿Cuánto es 6 + 7?', opciones: ['1/6', '3/4', '2/6'], respuesta: 1 },
           { pregunta: '¿Cuánto es 2/3 - 1/3?', opciones: ['1/3', '1/6', '1/2'], respuesta: 0 }
         ] 
       },

@@ -57,6 +57,14 @@ export const generateMockContent = (motor, params) => {
             escenas: [
               { 
                 pregunta: `Pregunta nivel 1 sobre: ${tema1}`, 
+                content: `Genera un arreglo JSON con 9 preguntas de opción múltiple basadas estrictamente en la siguiente información del CNEB:
+            ${contexto}
+            
+            Reglas:
+            1. Formato requerido: [{"pregunta": "...", "opciones": ["...", "...", "...", "..."], "respuesta": 0}]
+            2. Exactamente 4 opciones por pregunta.
+            3. "respuesta" es el índice (0-3) de la opción correcta.
+            4. Solo devuelve el JSON, sin texto adicional.`, 
                 opciones: ['Respuesta Incorrecta A', 'Respuesta Correcta', 'Respuesta Incorrecta B', 'Respuesta Incorrecta C'], 
                 respuesta: 1 
               },
@@ -80,13 +88,11 @@ export const generateMockContent = (motor, params) => {
           break;
         case 'TD':
           data = {
-            zonas: [tema1, tema2, tema3],
-            conceptos: [
-              { id: 1, texto: `Concepto relacionado a ${tema1}`, zona_correcta: tema1 },
-              { id: 2, texto: `Concepto relacionado a ${tema2}`, zona_correcta: tema2 },
-              { id: 3, texto: `Concepto relacionado a ${tema3}`, zona_correcta: tema3 },
-              { id: 4, texto: `Otro concepto de ${tema1}`, zona_correcta: tema1 }
-            ]
+            preguntasTrivia: Array.from({ length: 9 }, (_, i) => ({
+              pregunta: `Pregunta de desafío ${i + 1} sobre: ${i % 2 === 0 ? tema1 : tema2}`,
+              opciones: ['Respuesta Correcta', 'Distractor A', 'Distractor B', 'Distractor C'],
+              respuesta: 0
+            }))
           };
           break;
         case 'SIM':

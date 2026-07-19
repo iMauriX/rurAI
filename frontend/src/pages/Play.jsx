@@ -6,7 +6,7 @@ import { SkeletonLoader } from '../components/ui/SkeletonLoader';
 // Lazy loading de los motores lúdicos
 const DueloDecisiones      = lazy(() => import('../components/motors/DueloDecisiones'));
 const ClasificadorDefensivo = lazy(() => import('../components/motors/ClasificadorDefensivo'));
-const SimuladorDestino      = lazy(() => import('../components/motors/SimuladorDestino'));
+const DungeonCrawler        = lazy(() => import('../components/motors/DungeonCrawler'));
 
 const Play = () => {
   const { id } = useParams();
@@ -87,7 +87,7 @@ const Play = () => {
         <Suspense fallback={<SkeletonLoader />}>
           {actividad.tipoMotor === 'RPG' && <DueloDecisiones data={actividad.data} />}
           {actividad.tipoMotor === 'TD'  && <ClasificadorDefensivo data={actividad.data} />}
-          {actividad.tipoMotor === 'SIM' && <SimuladorDestino data={actividad.data} />}
+          {actividad.tipoMotor === 'SIM' && <DungeonCrawler data={actividad.data} />}
         </Suspense>
       </div>
 
