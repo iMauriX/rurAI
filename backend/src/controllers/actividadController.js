@@ -103,3 +103,64 @@ export const getReporte = (req, res, next) => {
     next(error);
   }
 };
+
+export const submitScore = (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { nombre, seccion, aciertos, errores } = req.body;
+
+    const actividad = db.actividades.find(a => a.tokenCorto === token || a.id === token);
+    
+    if (!actividad) {
+      return res.status(404).json({ error: 'Actividad no encontrada' });
+    }
+
+    const score = Math.max(0, aciertos * 200 - errores * 50);
+
+    if (!actividad.scores) actividad.scores = [];
+    
+    // Si el estudiante ya tiene un score en esta actividad, lo actualizamos si es mayor
+    const existingScoreIndex = actividad.scores.findIndex(s => s.nombre === nombre && s.seccion === seccion);
+    
+    if (existingScoreIndex !== -1) {
+      if (score > actividad.scores[existingScoreIndex].score) {
+        actividad.scores[existingScoreIndex] = { nombre, seccion, aciertos, errores, score, date: new Date().toISOString() };
+      }
+    } else {
+      actividad.scores.push({ nombre, seccion, aciertos, errores, score, date: new Date().toISOString() });
+    }
+
+    res.status(200).json({ message: 'Score guardado', score });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRanking = (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const actividad = db.actividades.find(a => a.tokenCorto === token || a.id === token);
+    
+    if (!actividad) {
+      return res.status(404).json({ error: 'Actividad no encontrada' });
+    }
+
+    const scores = actividad.scores || [];
+    
+    // Sort all by score descending
+    const generalRanking = [...scores].sort((a, b) => b.score - a.score);
+    
+    // Group by section
+    const sectionRanking = {
+      A: generalRanking.filter(s => s.seccion === 'A' || s.seccion === 'Sección A' || s.seccion === 'Grado A'),
+      B: generalRanking.filter(s => s.seccion === 'B' || s.seccion === 'Sección B' || s.seccion === 'Grado B')
+    };
+
+    res.status(200).json({
+      general: generalRanking,
+      bySection: sectionRanking
+    });
+  } catch (error) {
+    next(error);
+  }
+};

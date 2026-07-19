@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /* ─────────────────────────────────────────────
    Constantes de configuración
 ───────────────────────────────────────────── */
-const COMODIN_MAX = 1;          
-const AYUDA_MAX   = 1;          
+const COMODIN_MAX = 1;
+const AYUDA_MAX = 1;
 
-const BGS = ['/battle_bg.png', '/bg_2.png', '/bg_3.png', '/bg_4.png', '/bg_5.png'];
-const HERO_IMG = '/hero_sprite.png';
-const ENEMY_IMG = '/enemy_monster.png';
+const BGS = ['/bg_1.png', '/bg_2.png', '/bg_3.png', '/bg_4.png', '/bg_5.png'];
+const HERO_IMG = '/hero.png';
+const ENEMY_IMG = '/enemy.png';
 
 /* ─────────────────────────────────────────────
    Barra de HP 
@@ -17,7 +17,7 @@ const HpBar = ({ hp, maxHp }) => {
   const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
   const color =
     pct > 50 ? '#10b981' :
-    pct > 25 ? '#f59e0b' : '#ef4444';
+      pct > 25 ? '#f59e0b' : '#ef4444';
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
       <span style={{ fontSize: 13, fontWeight: 900, color: '#334155' }}>HP</span>
@@ -72,12 +72,12 @@ const Sprite = ({ src, alt, animate, shake, flip, size = 180, hidden, isAttackin
     transition: 'transform 0.2s ease, filter 0.2s ease',
     opacity: hidden ? 0 : 1,
     filter: (shake ? 'drop-shadow(0 0 15px #ef4444) brightness(1.5) ' : 'drop-shadow(0 10px 15px rgba(0,0,0,0.3)) ') + `hue-rotate(${hueRotate}deg)`,
-    animation: shake 
-      ? 'pokemon-shake 0.5s ease' 
-      : isAttacking 
-        ? 'pokemon-attack 0.5s ease' 
-        : animate 
-          ? 'pokemon-float 3s ease-in-out infinite' 
+    animation: shake
+      ? 'pokemon-shake 0.5s ease'
+      : isAttacking
+        ? 'pokemon-attack 0.5s ease'
+        : animate
+          ? 'pokemon-float 3s ease-in-out infinite'
           : undefined,
   };
   return (
@@ -103,10 +103,10 @@ const ActionBtn = ({ label, onClick, disabled, color, icon }) => (
     onClick={onClick}
     disabled={disabled}
     style={{
-      background: disabled ? '#f1f5f9' : '#ffffff',
-      border: `3px solid ${disabled ? '#cbd5e1' : color}`,
+      background: disabled ? '#e2e8f0' : '#ffffff',
+      border: `3px solid ${disabled ? '#94a3b8' : color}`,
       borderRadius: 12,
-      color: disabled ? '#94a3b8' : '#1e293b',
+      color: disabled ? '#64748b' : '#1e293b',
       padding: '12px',
       cursor: disabled ? 'not-allowed' : 'pointer',
       display: 'flex',
@@ -163,7 +163,7 @@ const OptionBtn = ({ label, index, onClick, disabled, revealed }) => {
         width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0, fontSize: 16
       }}>
-        {['A','B','C','D'][index]}
+        {['A', 'B', 'C', 'D'][index]}
       </div>
       <span style={{ flex: 1 }}>{label}</span>
       {revealed && <div style={{ position: 'absolute', right: 16, fontSize: 24, animation: 'pulse 1s infinite' }}>⭐</div>}
@@ -174,7 +174,8 @@ const OptionBtn = ({ label, index, onClick, disabled, revealed }) => {
 /* ─────────────────────────────────────────────
    COMPONENTE PRINCIPAL
 ───────────────────────────────────────────── */
-const DueloDecisiones = ({ data }) => {
+const DueloDecisiones = ({ data, onGameEnd }) => {
+  const stats = useRef({ aciertos: 0, errores: 0 });
   const maxHpJugador = data.personajes[0]?.hp || 100;
   const maxHpEnemigo = data.personajes[1]?.hp || 100;
 
@@ -183,29 +184,29 @@ const DueloDecisiones = ({ data }) => {
   const heroUrl = HERO_IMG;
   const enemyUrl = ENEMY_IMG;
 
-  const [escenaIndex, setEscenaIndex]  = useState(0);
-  const [hpJugador,  setHpJugador]     = useState(maxHpJugador);
-  const [hpEnemigo,  setHpEnemigo]     = useState(maxHpEnemigo);
-  const [gameOver,   setGameOver]      = useState(false);
-  const [victoria,   setVictoria]      = useState(false);
-  const [mensaje,    setMensaje]       = useState('');
-  
+  const [escenaIndex, setEscenaIndex] = useState(0);
+  const [hpJugador, setHpJugador] = useState(maxHpJugador);
+  const [hpEnemigo, setHpEnemigo] = useState(maxHpEnemigo);
+  const [gameOver, setGameOver] = useState(false);
+  const [victoria, setVictoria] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+
   // Fases: inicio -> intro_enemy -> intro_hero -> turno_enemigo -> turno_jugador -> evaluacion
-  const [fase, setFase] = useState('inicio'); 
+  const [fase, setFase] = useState('inicio');
   const [shakeJugador, setShakeJugador] = useState(false);
   const [shakeEnemigo, setShakeEnemigo] = useState(false);
   const [isEnemyAttacking, setIsEnemyAttacking] = useState(false);
   const [showQuestionAnim, setShowQuestionAnim] = useState(false);
-  
+
   // Menús del jugador
   const [menuFase, setMenuFase] = useState('principal'); // 'principal' o 'opciones'
   const [dificultad, setDificultad] = useState(1);
 
   // Poderes
-  const [comodines,  setComodines]  = useState(COMODIN_MAX);
-  const [ayudas,     setAyudas]     = useState(AYUDA_MAX);
-  const [dobleDaño,  setDobleDaño]  = useState(false);
-  const [opReveal,   setOpReveal]   = useState(null);   
+  const [comodines, setComodines] = useState(COMODIN_MAX);
+  const [ayudas, setAyudas] = useState(AYUDA_MAX);
+  const [dobleDaño, setDobleDaño] = useState(false);
+  const [opReveal, setOpReveal] = useState(null);
 
   const totalEscenas = data.escenas.length;
   const escena = data.escenas[escenaIndex % totalEscenas];
@@ -238,16 +239,18 @@ const DueloDecisiones = ({ data }) => {
     setFase('turno_enemigo');
     setDificultad(generarDificultad());
     setMensaje(`${nombreEnemigo} se prepara para atacar...`);
-    
+
     // Animación de ataque del monstruo lanzando la pregunta
     setTimeout(() => {
       setIsEnemyAttacking(true);
       setShowQuestionAnim(true); // Activar animación de "❓❓" volando
       setMensaje(`¡${nombreEnemigo} lanza una PREGUNTA!`);
-      
+
       setTimeout(() => {
         setIsEnemyAttacking(false);
+        setShakeJugador(true); // Player impact
         setTimeout(() => {
+          setShakeJugador(false);
           setShowQuestionAnim(false);
           setFase('turno_jugador');
           setMenuFase('principal');
@@ -274,6 +277,7 @@ const DueloDecisiones = ({ data }) => {
     let dmg = getDaño(esCorrecta, dificultad);
 
     if (esCorrecta) {
+      stats.current.aciertos++;
       if (dobleDaño) dmg *= 2;
       const nuevoHp = Math.max(0, hpEnemigo - dmg);
       setHpEnemigo(nuevoHp);
@@ -282,6 +286,7 @@ const DueloDecisiones = ({ data }) => {
       setTimeout(() => setShakeEnemigo(false), 800);
       avanzarSiguiente(nuevoHp, hpJugador);
     } else {
+      stats.current.errores++;
       const nuevoHp = Math.max(0, hpJugador - dmg);
       setHpJugador(nuevoHp);
       setShakeJugador(true);
@@ -295,16 +300,17 @@ const DueloDecisiones = ({ data }) => {
     setTimeout(() => {
       setOpReveal(null);
       setDobleDaño(false);
-      
+
       if (hpE <= 0) return terminar(true);
       if (hpJ <= 0) return terminar(false);
-      
+
       setEscenaIndex(i => i + 1);
       iniciarTurnoEnemigo();
     }, 2500);
   };
 
   const pasarPregunta = () => {
+    stats.current.errores++;
     setFase('evaluacion');
     const dmg = 20;
     const nuevoHp = Math.max(0, hpJugador - dmg);
@@ -319,6 +325,9 @@ const DueloDecisiones = ({ data }) => {
     setGameOver(true);
     setVictoria(win);
     setMensaje(win ? '¡Has derrotado al monstruo de manera épica!' : 'Te quedaste sin energía...');
+    if (onGameEnd) {
+      onGameEnd({ aciertos: stats.current.aciertos, errores: stats.current.errores });
+    }
   };
 
   const estrellasDificultad = '⭐'.repeat(dificultad);
@@ -338,7 +347,7 @@ const DueloDecisiones = ({ data }) => {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }}>
-      
+
       {/* ── ESTILOS GLOBALES DE ANIMACIÓN ── */}
       <style>{`
         @keyframes pulse {
@@ -384,13 +393,13 @@ const DueloDecisiones = ({ data }) => {
       </div>
 
       <div style={{
-        position: 'absolute', top: 70, right: 100, zIndex: 5,
+        position: 'absolute', top: 70, right: 100, zIndex: 15,
         transform: fase === 'inicio' ? 'translateX(400px)' : 'translateX(0)',
         transition: 'transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         opacity: fase !== 'inicio' ? 1 : 0
       }}>
-        <Sprite src={enemyUrl} alt={nombreEnemigo} animate={!gameOver && fase !== 'turno_enemigo'} isAttacking={isEnemyAttacking} shake={shakeEnemigo} flip={true} size={280} />
-        
+        <Sprite src={enemyUrl} alt={nombreEnemigo} animate={!gameOver && fase !== 'turno_enemigo'} isAttacking={isEnemyAttacking} shake={shakeEnemigo} flip={false} size={280} />
+
         {/* Animación de la pregunta volando */}
         {showQuestionAnim && (
           <div style={{
@@ -430,36 +439,46 @@ const DueloDecisiones = ({ data }) => {
           zIndex: 20,
           animation: 'slide-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
         }}>
-          
+
           {/* Opciones o Menú Principal */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             {!gameOver && menuFase === 'principal' && fase === 'turno_jugador' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, height: '100%' }}>
                 <ActionBtn icon="⚔️" label="Responder" color="#3b82f6" onClick={() => setMenuFase('opciones')} />
-                <ActionBtn 
-                  icon="🃏" label={`Comodín (${comodines})`} color="#8b5cf6" 
-                  disabled={comodines <= 0 || dobleDaño} 
-                  onClick={() => { setComodines(c => c - 1); setDobleDaño(true); }} 
+                <ActionBtn
+                  icon="🃏" label={`Activar daño doble (${comodines})`} color="#8b5cf6"
+                  disabled={comodines <= 0 || dobleDaño}
+                  onClick={() => { setComodines(c => c - 1); setDobleDaño(true); }}
                 />
-                <ActionBtn 
-                  icon="💡" label={`Pista (${ayudas})`} color="#f59e0b" 
-                  disabled={ayudas <= 0 || opReveal !== null} 
-                  onClick={() => { setAyudas(a => a - 1); setOpReveal(escena.respuesta); }} 
+                <ActionBtn
+                  icon="💡" label={`Pista (${ayudas})`} color="#f59e0b"
+                  disabled={ayudas <= 0 || opReveal !== null}
+                  onClick={() => { setAyudas(a => a - 1); setOpReveal(escena.respuesta); }}
                 />
                 <ActionBtn icon="🏃" label="Pasar (-20 HP)" color="#ef4444" onClick={pasarPregunta} />
               </div>
             )}
 
             {!gameOver && menuFase === 'opciones' && fase === 'turno_jugador' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, height: '100%' }}>
-                {escena.opciones.map((op, i) => (
-                  <OptionBtn
-                    key={i} index={i} label={op}
-                    onClick={evaluarRespuesta}
-                    disabled={fase === 'evaluacion'}
-                    revealed={opReveal === i}
-                  />
-                ))}
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, flex: 1 }}>
+                  {escena.opciones.map((op, i) => (
+                    <OptionBtn
+                      key={i} index={i} label={op}
+                      onClick={evaluarRespuesta}
+                      disabled={fase === 'evaluacion'}
+                      revealed={opReveal === i}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={() => setMenuFase('principal')}
+                  style={{ alignSelf: 'flex-start', background: '#334155', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'background 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#475569'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#334155'}
+                >
+                  ◀ Volver
+                </button>
               </div>
             )}
           </div>
@@ -493,7 +512,7 @@ const DueloDecisiones = ({ data }) => {
             }}>
               {estrellasDificultad}
             </div>
-            
+
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#0f172a', textAlign: 'center', lineHeight: 1.4 }}>
                 {fase === 'evaluacion' || gameOver ? mensaje : escena.pregunta}

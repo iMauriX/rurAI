@@ -51,7 +51,6 @@ export const generar = async (req, res, next) => {
     // Incrementar límite de usuario
     user.generacionesMes += 1;
 
-    // Crear nueva actividad
     const nuevaActividad = {
       id: `act-${db.actividades.length + 1}-${Date.now()}`,
       temaId: tema.id,
@@ -61,6 +60,7 @@ export const generar = async (req, res, next) => {
       titulo: `${tema.nombre} en acción`,
       descripcion: `Juego de tipo ${motor} para aprender ${tema.nombre}`,
       dataIa,
+      scores: [],
       createdAt: new Date().toISOString()
     };
 
