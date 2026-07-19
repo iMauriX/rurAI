@@ -1,6 +1,9 @@
 import { db } from '../database.js';
 import { generateUniqueToken } from '../services/tokenService.js';
 import { generateMockContent } from '../services/iaService.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
 
 export const generar = async (req, res, next) => {
   try {
@@ -8,8 +11,15 @@ export const generar = async (req, res, next) => {
     const user = req.user;
 
     // Check freemium limits
-    if (user.generacionesMes >= 15) {
-      return res.status(403).json({ error: 'Límite de generaciones mensuales alcanzado' });
+    const limits = {
+      'Free': 5,
+      'Pro': 30,
+      'Institucional': Infinity
+    };
+    const maxGenerations = limits[user.plan] || 5;
+
+    if (user.generacionesMes >= maxGenerations) {
+      return res.status(403).json({ error: `Límite de generaciones mensuales alcanzado para el plan ${user.plan} (${maxGenerations} generaciones)` });
     }
 
     const tema = db.temas.find(t => t.id === temaId);
@@ -65,5 +75,25 @@ export const generar = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+
+export const uploadPdf = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se subió ningún archivo PDF' });
+    }
+    
+    // Parse the PDF buffer
+    const data = await pdfParse(req.file.buffer);
+    
+    // Clean up text format slightly if needed, then return it
+    res.status(200).json({
+      text: data.text.trim(),
+      numPages: data.numpages
+    });
+  } catch (error) {
+    console.error('Error al procesar el archivo PDF', error);
+    res.status(500).json({ error: 'No se pudo procesar el archivo PDF. Asegúrate de que sea un archivo PDF válido.' });
   }
 };

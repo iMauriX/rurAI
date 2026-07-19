@@ -7,8 +7,8 @@ export const db = {
       apellido: 'Ramos', 
       correo: 'carlos@mail.com', 
       password: '123456', 
-      plan: 'Free', 
-      generacionesMes: 5 
+      plan: 'Institucional', 
+      generacionesMes: 0 
     },
     { 
       id: 'usr-2', 

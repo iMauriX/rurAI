@@ -16,6 +16,8 @@
     "docx": "^9.0.3",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "nanoid": "^5.0.7"
+    "multer": "^2.2.0",
+    "nanoid": "^5.0.7",
+    "pdf-parse": "^2.4.5"
   }
 }

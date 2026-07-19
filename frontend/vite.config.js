@@ -5,15 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'motor-rpg': ['./src/components/motors/DueloDecisiones.jsx'],
-          'motor-td': ['./src/components/motors/ClasificadorDefensivo.jsx'],
-          'motor-sim': ['./src/components/motors/SimuladorDestino.jsx'],
-          'vendor': ['react', 'react-dom', 'react-router-dom', 'axios']
-        }
-      }
-    }
+    // Default vite chunking is sufficient
   }
 })
