@@ -1,4 +1,4 @@
-# RurAI - MVP (Producto Mínimo Viable)
+# RurAI
 
 RurAI es una plataforma educativa gamificada diseñada para docentes de secundaria en Perú. Permite la creación y personalización de experiencias lúdicas basadas en el Currículo Nacional de Educación Básica de manera rápida e intuitiva.
 
