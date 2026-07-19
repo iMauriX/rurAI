@@ -41,29 +41,47 @@ export class DoorEntity extends Entity {
     if (this.answerData && this.answerData.text) {
       // Hide text for incorrect doors when clear
       if (roomState === 'CLEAR' && !this.answerData.correct) return;
+      if (roomState === 'HOSTILE') return; // Hide text when hostile
 
-      ctx.fillStyle = 'white';
+      const text = this.answerData.text;
       ctx.font = 'bold 20px system-ui';
-      ctx.textAlign = 'center';
+      const textMetrics = ctx.measureText(text);
+      const paddingX = 12;
+      const paddingY = 8;
+      const bgWidth = textMetrics.width + paddingX * 2;
+      const bgHeight = 30 + paddingY * 2;
       
-      // Position text based on door position
-      let textX = this.x + this.width / 2;
-      let textY = this.y - 15;
+      let bgX, bgY;
       
-      // If it's a vertical door (West/East), adjust text to not overlap
+      // Position text box to ensure it's inside the room bounds
       if (this.position === 'WEST') {
-        textX = this.x - 10;
-        textY = this.y + this.height / 2 + 7;
-        ctx.textAlign = 'right';
+        bgX = this.x + this.width + 10;
+        bgY = this.y + this.height / 2 - bgHeight / 2;
       } else if (this.position === 'EAST') {
-        textX = this.x + this.width + 10;
-        textY = this.y + this.height / 2 + 7;
-        ctx.textAlign = 'left';
+        bgX = this.x - bgWidth - 10;
+        bgY = this.y + this.height / 2 - bgHeight / 2;
       } else if (this.position === 'NORTH') {
-        textY = this.y + this.height + 25; // Draw text below north door so it's inside the room
+        bgX = this.x + this.width / 2 - bgWidth / 2;
+        bgY = this.y + this.height + 10;
+      } else { // SOUTH
+        bgX = this.x + this.width / 2 - bgWidth / 2;
+        bgY = this.y - bgHeight - 10;
       }
-      
-      ctx.fillText(this.answerData.text, textX, textY);
+
+      // Draw text background
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'; // Dark slate background, slightly transparent
+      ctx.beginPath();
+      ctx.roundRect(bgX, bgY, bgWidth, bgHeight, 8);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Draw text
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, bgX + bgWidth / 2, bgY + bgHeight / 2);
     }
   }
 }

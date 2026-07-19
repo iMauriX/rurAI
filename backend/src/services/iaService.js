@@ -58,7 +58,7 @@ export const generateMockContent = (motor, params) => {
               { 
                 pregunta: `Pregunta nivel 1 sobre: ${tema1}`, 
                 content: `Genera un arreglo JSON con 9 preguntas de opción múltiple basadas estrictamente en la siguiente información del CNEB:
-            ${contexto}
+            [Contexto del Tema]
             
             Reglas:
             1. Formato requerido: [{"pregunta": "...", "opciones": ["...", "...", "...", "..."], "respuesta": 0}]
@@ -95,7 +95,7 @@ export const generateMockContent = (motor, params) => {
             }))
           };
           break;
-        case 'SIM':
+        case 'ACCION':
           data = {
             recursos_iniciales: { energia: 100, puntos: 50 },
             eventos: [

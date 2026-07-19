@@ -65,14 +65,23 @@ export class RangedShooter extends EnemyEntity {
   }
 
   draw(ctx) {
-    ctx.fillStyle = '#8b5cf6'; // Purple enemy
+    ctx.fillStyle = '#8b5cf6'; // Purple wizard
     ctx.beginPath();
-    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, 0, Math.PI * 2);
+    ctx.moveTo(this.x + this.width/2, this.y);
+    ctx.lineTo(this.x + this.width, this.y + this.height);
+    ctx.lineTo(this.x, this.y + this.height);
     ctx.fill();
-    // Inner eye
-    ctx.fillStyle = '#fbbf24'; // Yellow center
+    
+    // Eye
+    ctx.fillStyle = '#fde047';
     ctx.beginPath();
-    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 8, 0, Math.PI * 2);
+    ctx.arc(this.x + this.width/2, this.y + this.height/2 + 4, 4, 0, Math.PI * 2);
     ctx.fill();
+
+    // HP Bar
+    ctx.fillStyle = 'black';
+    ctx.fillRect(this.x, this.y - 10, this.width, 5);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(this.x, this.y - 10, this.width * (this.hp / this.maxHp), 5);
   }
 }

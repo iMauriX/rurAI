@@ -29,7 +29,7 @@ export const GameCanvas = () => {
     };
   }, []); // Only run once on mount
 
-  // Sync doors and enemies when room state changes
+  // Sync doors when room state changes
   useEffect(() => {
     const engine = engineRef.current;
     if (!engine) return;
@@ -51,15 +51,7 @@ export const GameCanvas = () => {
       engine.addEntity(door, 'doors');
     });
 
-    if (roomState === 'HOSTILE') {
-      // Spawn some enemies inside the room boundaries
-      engine.entities.enemies = [
-        new MeleeChaser(100, 100),
-        new MeleeChaser(600, 100),
-        new RangedShooter(400, 150)
-      ];
-    } else if (roomState === 'CLEAR') {
-      engine.entities.enemies = [];
+    if (roomState === 'CLEAR' || roomState === 'BOSS_FIGHT') {
       engine.entities.projectiles = [];
     }
   }, [doors, roomState]);

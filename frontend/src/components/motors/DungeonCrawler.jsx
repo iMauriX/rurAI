@@ -4,27 +4,11 @@ import { GameHUD } from '../game/GameHUD';
 import { useGameStore } from '../../store/useGameStore';
 
 const DungeonCrawler = ({ data }) => {
-  const setupDoors = useGameStore((state) => state.setupDoors);
+  const setupGame = useGameStore((state) => state.setupGame);
 
   useEffect(() => {
-    // Si data tiene el formato esperado del backend, lo inyectamos
-    if (data && data.preguntas && data.preguntas.length > 0) {
-      // Cargamos la primera pregunta para inicializar
-      const q = data.preguntas[0];
-      setupDoors({
-        question: q.pregunta || q.question,
-        correct: q.correcta || q.correct,
-        distractors: q.incorrectas || q.distractors
-      });
-    } else {
-      // Fallback para pruebas sin datos
-      setupDoors({
-        question: "¿Cuánto es 2 + 2?",
-        correct: "4",
-        distractors: ["3", "5", "6"]
-      });
-    }
-  }, [data, setupDoors]);
+    setupGame(data);
+  }, [data, setupGame]);
 
   return (
     <div className="w-full flex justify-center items-center flex-col">

@@ -1,64 +1,90 @@
 import { create } from 'zustand';
+import { usePlayerStore } from './usePlayerStore';
 
-export const useGameStore = create((set) => ({
-  roomState: 'QUESTION', // CLEAR, HOSTILE, QUESTION
-  currentQuestion: {
-    question: "What is 2 + 2?",
-    correct: "4",
-    distractors: ["3", "5", "6"]
-  },
+export const useGameStore = create((set, get) => ({
+  roomState: 'QUESTION', // QUESTION, HOSTILE, BOSS_FIGHT, GAME_OVER, VICTORY
+  questions: [],
+  roomsCleared: 0,
+  currentQuestion: null,
   doors: [], // Array of objects { answer: string, correct: boolean, position: string }
   enemiesAlive: 0,
   
   setRoomState: (state) => set({ roomState: state }),
   
-  enterRoom: (isCorrect) => set((state) => {
-    // Deprecated from old logic, but keeping for compatibility just in case
-    if (isCorrect) return { roomState: 'CLEAR' };
-    else return { roomState: 'HOSTILE', enemiesAlive: 3 }; 
-  }),
-
-  shootDoor: (isCorrect) => set((state) => {
-    if (state.roomState !== 'QUESTION') return state; // Only trigger if in QUESTION state
-    
-    if (isCorrect) {
-      return { roomState: 'CLEAR' }; // Door opens
+  setupGame: (data) => {
+    let qs = [];
+    if (data && data.escenas && data.escenas.length > 0) {
+      qs = data.escenas;
+    } else if (data && data.preguntas && data.preguntas.length > 0) {
+      qs = data.preguntas;
     } else {
-      return { roomState: 'HOSTILE', enemiesAlive: 3 }; // Spawn enemies
+      qs = Array.from({length: 5}, (_, i) => ({
+        pregunta: `¿Pregunta de prueba ${i+1}?`,
+        opciones: ["Correcta", "Falsa 1", "Falsa 2", "Falsa 3"],
+        respuesta: 0
+      }));
     }
-  }),
-  
-  nextRoom: () => set((state) => {
-    // Here we would load the next question from data
-    // For now we just reset the doors to question state
-    return { roomState: 'QUESTION' };
-  }),
-  
-  killEnemy: () => set((state) => {
-    const newCount = Math.max(0, state.enemiesAlive - 1);
-    return {
-      enemiesAlive: newCount,
-      roomState: newCount === 0 ? 'QUESTION' : 'HOSTILE' // Go back to QUESTION to try again!
-    };
-  }),
+    
+    set({ questions: qs, roomsCleared: 0, roomState: 'QUESTION' });
+    get().loadRoom(0);
+  },
 
-  setupDoors: (question) => {
+  loadRoom: (index, isPenalized = false) => {
+    const { questions } = get();
+    if (index >= 5 || index >= questions.length) {
+      set({ roomState: 'BOSS_INTRO', doors: [] });
+      setTimeout(() => {
+        set({ roomState: 'BOSS_FIGHT' });
+      }, 3000);
+      return;
+    }
+
+    const q = questions[index];
+    const correctIdx = q.respuesta !== undefined ? q.respuesta : q.correctIndex || 0;
+    const distractors = q.opciones ? q.opciones.filter((_, i) => i !== correctIdx) : q.distractors || ["A", "B", "C"];
+    const correctText = q.opciones ? q.opciones[correctIdx] : q.correct || "Correcta";
+
     const answers = [
-      { text: question.correct, correct: true },
-      ...question.distractors.map(d => ({ text: d, correct: false }))
+      { text: correctText, correct: true },
+      ...distractors.map(d => ({ text: d, correct: false }))
     ];
-    // Shuffle array
     answers.sort(() => Math.random() - 0.5);
     
     set({
-      currentQuestion: question,
-      doors: [
+      currentQuestion: { question: q.pregunta || q.question },
+      doors: isPenalized ? [] : [
         { ...answers[0], position: 'NORTH' },
         { ...answers[1], position: 'SOUTH' },
         { ...answers[2], position: 'EAST' },
         { ...answers[3], position: 'WEST' },
       ],
-      roomState: 'QUESTION'
+      roomState: isPenalized ? 'HOSTILE' : 'QUESTION',
+      enemiesAlive: isPenalized ? 3 : 0,
+      roomsCleared: index
     });
-  }
+  },
+
+  enterDoor: (isCorrect) => {
+    const { roomState, roomsCleared } = get();
+    if (roomState !== 'QUESTION') return;
+    
+    if (isCorrect) {
+      usePlayerStore.getState().applyRandomBonus();
+      get().loadRoom(roomsCleared + 1, false);
+    } else {
+      // Advance to next room immediately but penalized (HOSTILE with no doors)
+      get().loadRoom(roomsCleared + 1, true);
+    }
+  },
+  
+  killEnemy: () => set((state) => {
+    const newCount = Math.max(0, state.enemiesAlive - 1);
+    if (newCount === 0 && state.roomState === 'HOSTILE') {
+      // Once enemies are dead, we advance to next room immediately
+      setTimeout(() => {
+        get().loadRoom(state.roomsCleared + 1);
+      }, 500); // Small delay to let player see the last enemy die
+    }
+    return { enemiesAlive: newCount };
+  }),
 }));

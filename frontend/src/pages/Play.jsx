@@ -86,8 +86,8 @@ const Play = () => {
       <div style={{ width: '100%', maxWidth: 860 }}>
         <Suspense fallback={<SkeletonLoader />}>
           {actividad.tipoMotor === 'RPG' && <DueloDecisiones data={actividad.data} />}
-          {actividad.tipoMotor === 'TD'  && <ClasificadorDefensivo data={actividad.data} />}
-          {actividad.tipoMotor === 'SIM' && <DungeonCrawler data={actividad.data} />}
+          {actividad.tipoMotor === 'TD' && <ClasificadorDefensivo data={actividad.data} />}
+          {actividad.tipoMotor === 'ACCION' && <DungeonCrawler data={actividad.data} />}
         </Suspense>
       </div>
 

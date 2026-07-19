@@ -6,7 +6,7 @@ import { LogOut, Play, Download, Plus, AlertCircle, Trash2, Sparkles, Gamepad2, 
 const MOTOR_INFO = {
   RPG: { label: 'Duelo de Decisiones', icon: '⚔️', color: '#6366f1' },
   TD:  { label: 'Clasificador Defensivo', icon: '🏰', color: '#f59e0b' },
-  SIM: { label: 'Simulador de Gestión', icon: '🌐', color: '#10b981' },
+  ACCION: { label: 'Acción', icon: '🔥', color: '#ef4444' },
 };
 
 const Dashboard = () => {

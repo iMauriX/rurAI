@@ -8,6 +8,51 @@ export const Physics = {
     );
   },
 
+  resolveAABBCollision(a, b) {
+    // Calculate half sizes
+    const aHalfW = a.width / 2;
+    const aHalfH = a.height / 2;
+    const bHalfW = b.width / 2;
+    const bHalfH = b.height / 2;
+
+    // Calculate centers
+    const aCenterX = a.x + aHalfW;
+    const aCenterY = a.y + aHalfH;
+    const bCenterX = b.x + bHalfW;
+    const bCenterY = b.y + bHalfH;
+
+    // Calculate distance between centers
+    const diffX = aCenterX - bCenterX;
+    const diffY = aCenterY - bCenterY;
+
+    // Calculate minimum translation distance
+    const minXDist = aHalfW + bHalfW;
+    const minYDist = aHalfH + bHalfH;
+
+    // Calculate depth of collision
+    const depthX = minXDist - Math.abs(diffX);
+    const depthY = minYDist - Math.abs(diffY);
+
+    if (depthX > 0 && depthY > 0) {
+      // Resolve along the axis of least penetration
+      if (depthX < depthY) {
+        if (diffX > 0) {
+          a.x += depthX; // Push right
+        } else {
+          a.x -= depthX; // Push left
+        }
+      } else {
+        if (diffY > 0) {
+          a.y += depthY; // Push down
+        } else {
+          a.y -= depthY; // Push up
+        }
+      }
+      return true;
+    }
+    return false;
+  },
+
   resolveWallCollision(entity, roomBounds) {
     let hitWall = false;
     

@@ -34,20 +34,18 @@ export class MeleeChaser extends EnemyEntity {
   }
 
   draw(ctx) {
-    ctx.fillStyle = '#ef4444'; // Red enemy
+    ctx.fillStyle = '#16a34a'; // Green goblin color
     ctx.fillRect(this.x, this.y, this.width, this.height);
-    // Draw angry eyes
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    ctx.moveTo(this.x + 5, this.y + 5);
-    ctx.lineTo(this.x + 12, this.y + 10);
-    ctx.lineTo(this.x + 5, this.y + 12);
-    ctx.fill();
     
-    ctx.beginPath();
-    ctx.moveTo(this.x + 27, this.y + 5);
-    ctx.lineTo(this.x + 20, this.y + 10);
-    ctx.lineTo(this.x + 27, this.y + 12);
-    ctx.fill();
+    // Goblin face
+    ctx.fillStyle = 'white';
+    ctx.fillRect(this.x + 4, this.y + 4, 6, 6);
+    ctx.fillRect(this.x + 22, this.y + 4, 6, 6);
+    ctx.fillStyle = 'red';
+    ctx.fillRect(this.x + 6, this.y + 6, 2, 2);
+    ctx.fillRect(this.x + 24, this.y + 6, 2, 2);
+    
+    // HP Bar
+    ctx.fillStyle = 'black';
   }
 }
