@@ -30,11 +30,9 @@ La aplicación sigue una arquitectura **Cliente-Servidor (SPA - Single Page Appl
 
 ## ✨ Características Principales
 
-1. **Generación de minijuegos educativos mediante IA:** Creación de dinámicas interactivas como Duelo de Decisiones (RPG), Clasificador Defensivo (TD) y Simuladores de Destino.
+1. **Generación de minijuegos educativos mediante IA:** Creación de dinámicas interactivas como Duelo de Decisiones (RPG), Clasificador Defensivo (TD) y Simuladores de Acción.
 2. **Alineación con el Currículo Nacional:** Los contenidos generados están directamente vinculados al Currículo Nacional de Educación Básica de Perú.
 3. **Acceso rápido para estudiantes:** Los alumnos no necesitan registrarse; acceden a los minijuegos generados directamente mediante un código de 6 caracteres.
-4. **Exportación de reportes:** Permite a los docentes descargar reportes y planificadores de las actividades en formato Word (.docx).
-
 ---
 
 ## 🛠️ Guía de Instalación y Ejecución
