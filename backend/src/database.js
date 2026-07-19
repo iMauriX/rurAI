@@ -34,7 +34,7 @@ export const db = {
       dataIa: { 
         personajes: [{ nombre: 'Héroe', hp: 100 }, { nombre: 'Dragón', hp: 80 }], 
         escenas: [
-          { pregunta: '¿Cuánto es 1/2 + 1/4?', opciones: ['1/6', '3/4', '2/6'], respuesta: 1 },
+          { pregunta: '¿Cuánto es 6 + 7?', opciones: ['1/6', '3/4', '2/6'], respuesta: 1 },
           { pregunta: '¿Cuánto es 2/3 - 1/3?', opciones: ['1/3', '1/6', '1/2'], respuesta: 0 }
         ] 
       },
@@ -46,14 +46,15 @@ export const db = {
       tipoMotor: 'TD', 
       usuarioId: 'usr-2', 
       tokenCorto: 'XYZ789', 
-      titulo: 'Clasifica Verbos', 
-      descripcion: 'Arrastra los verbos a su tiempo correcto',
+      titulo: 'Trivia Defensiva', 
+      descripcion: 'Defiende tu base respondiendo preguntas correctamente',
       dataIa: { 
-        zonas: ['Presente', 'Pasado', 'Futuro'], 
-        conceptos: [
-          { id: 1, texto: 'Camino', zona_correcta: 'Presente' },
-          { id: 2, texto: 'Caminé', zona_correcta: 'Pasado' },
-          { id: 3, texto: 'Caminaré', zona_correcta: 'Futuro' }
+        preguntasTrivia: [
+          { pregunta: '¿Cuál es el verbo en pasado?', opciones: ['Caminé', 'Camino', 'Caminaré'], respuesta: 0 },
+          { pregunta: '¿Cuál es el verbo en futuro?', opciones: ['Cantará', 'Canta', 'Cantó'], respuesta: 0 },
+          { pregunta: '¿Cuál es el verbo en presente?', opciones: ['Juego', 'Jugué', 'Jugaré'], respuesta: 0 },
+          { pregunta: '¿Cuál es un verbo en infinitivo?', opciones: ['Correr', 'Corriendo', 'Corrió'], respuesta: 0 },
+          { pregunta: '¿Qué tiempo es "Había comido"?', opciones: ['Pretérito pluscuamperfecto', 'Presente', 'Futuro'], respuesta: 0 }
         ] 
       },
       createdAt: new Date().toISOString()

@@ -1,7 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/api';
-import { LogOut, Play, Download, Plus, AlertCircle, Trash2 } from 'lucide-react';
+import { LogOut, Play, Download, Plus, AlertCircle, Trash2, Sparkles, Gamepad2, Clock, Zap } from 'lucide-react';
+
+const MOTOR_INFO = {
+  RPG: { label: 'Duelo de Decisiones', icon: '⚔️', color: '#6366f1' },
+  TD:  { label: 'Clasificador Defensivo', icon: '🏰', color: '#f59e0b' },
+  ACCION: { label: 'Acción', icon: '🔥', color: '#ef4444' },
+};
 
 const Dashboard = () => {
   const { user, logout } = useContext(AuthContext);
@@ -80,7 +86,6 @@ const Dashboard = () => {
       
       setSuccessMsg(`¡Actividad generada! Enlace: https://rurai.pe/play/${response.data.token}`);
       
-      // Actualizar historial
       const historialRes = await api.get('/actividad/historial');
       setHistorial(historialRes.data.data);
     } catch (err) {
@@ -121,76 +126,159 @@ const Dashboard = () => {
     }
   };
 
+  const selectStyle = {
+    width: '100%', padding: '12px 14px',
+    border: '2px solid #e2e8f0', borderRadius: 12,
+    fontSize: 14, outline: 'none', background: '#fff',
+    transition: 'border-color 0.2s ease',
+    appearance: 'none',
+    boxSizing: 'border-box',
+    cursor: 'pointer',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-indigo-600 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <span className="text-white text-2xl font-bold">RurAI Dashboard</span>
+    <div style={{
+      minHeight: '100vh',
+      background: '#fafafa',
+      fontFamily: "'Poppins', system-ui, sans-serif",
+    }}>
+      {/* ── Navbar ── */}
+      <nav style={{
+        background: '#fff',
+        borderBottom: '1px solid #e2e8f0',
+        padding: '0 32px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 30,
+      }}>
+        <div style={{
+          maxWidth: 1200, margin: '0 auto',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          height: 64,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Sparkles style={{ color: '#6366f1', width: 24, height: 24 }} />
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>
+              RurAI
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{
+              background: '#f1f5f9', padding: '6px 14px', borderRadius: 8,
+              fontSize: 13, fontWeight: 700, color: '#475569',
+            }}>
+              Plan: <span style={{ color: '#6366f1' }}>{user?.plan || 'Free'}</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-indigo-100 text-sm">
-                Plan: <span className="font-bold bg-indigo-700 px-2 py-1 rounded">{user?.plan}</span>
-              </span>
-              <button
-                onClick={logout}
-                className="text-white hover:text-indigo-200 flex items-center"
-              >
-                <LogOut className="h-5 w-5 mr-1" />
-                Salir
-              </button>
-            </div>
+            <button
+              onClick={logout}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'none', border: '2px solid #e2e8f0',
+                padding: '8px 16px', borderRadius: 10,
+                fontSize: 14, fontWeight: 600, color: '#64748b',
+                cursor: 'pointer', transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b'; }}
+            >
+              <LogOut style={{ width: 16, height: 16 }} />
+              Salir
+            </button>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 flex gap-6 flex-col md:flex-row">
-        
-        {/* Columna Izquierda: Formulario de Generación */}
-        <div className="md:w-1/3 space-y-6">
-          <div className="bg-white shadow rounded-lg p-6 border-t-4 border-indigo-500">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center mb-4">
-              <Plus className="mr-2" /> Nueva Actividad
-            </h2>
+      {/* ── Main Content ── */}
+      <main style={{
+        maxWidth: 1200, margin: '0 auto',
+        padding: '32px 32px',
+        display: 'flex', gap: 32,
+        flexWrap: 'wrap',
+      }}>
+        {/* ── Columna Izquierda: Generación ── */}
+        <div style={{ flex: '0 0 380px', maxWidth: 380 }}>
+          <div style={{
+            background: '#fff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 20,
+            padding: 28,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12,
+                background: '#f0f0ff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Plus style={{ width: 20, height: 20, color: '#6366f1' }} />
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                Nueva Actividad
+              </h2>
+            </div>
             
             {error && (
-              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded flex items-start">
-                <AlertCircle className="shrink-0 mr-2 h-5 w-5" />
-                <span className="text-sm">{error}</span>
+              <div style={{
+                background: '#fef2f2', border: '1px solid #fecaca',
+                color: '#dc2626', padding: '12px 16px', borderRadius: 12,
+                fontSize: 13, marginBottom: 20, fontWeight: 500,
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
+                {error}
               </div>
             )}
             
             {successMsg && (
-              <div className="mb-4 p-3 bg-green-100 text-green-700 rounded text-sm break-all">
+              <div style={{
+                background: '#f0fdf4', border: '1px solid #bbf7d0',
+                color: '#16a34a', padding: '12px 16px', borderRadius: 12,
+                fontSize: 13, marginBottom: 20, fontWeight: 500, wordBreak: 'break-all',
+              }}>
                 {successMsg}
               </div>
             )}
 
-            <form onSubmit={handleGenerar} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Motor Lúdico</label>
-                <select
-                  name="motor"
-                  value={formData.motor}
-                  onChange={handleChange}
-                  className="w-full border-slate-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-                  <option value="RPG">RPG (Duelo de Decisiones)</option>
-                  <option value="TD">Tower Defense (Clasificador)</option>
-                  <option value="SIM">Simulador (Gestión de Recursos)</option>
-                </select>
+            <form onSubmit={handleGenerar}>
+              {/* Motor Selector — Cards */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 10 }}>
+                  Motor de Juego
+                </label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {Object.entries(MOTOR_INFO).map(([key, info]) => (
+                    <button
+                      key={key} type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, motor: key }))}
+                      style={{
+                        flex: 1, padding: '14px 8px', borderRadius: 14,
+                        border: formData.motor === key ? `2px solid ${info.color}` : '2px solid #e2e8f0',
+                        background: formData.motor === key ? `${info.color}10` : '#fff',
+                        cursor: 'pointer', textAlign: 'center',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <div style={{ fontSize: 24, marginBottom: 4 }}>{info.icon}</div>
+                      <div style={{
+                        fontSize: 11, fontWeight: 700,
+                        color: formData.motor === key ? info.color : '#64748b',
+                      }}>
+                        {key}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Área</label>
-                  <select
-                    name="area"
-                    value={formData.area}
-                    onChange={handleChange}
-                    className="w-full border-slate-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
+              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 8 }}>
+                    Área
+                  </label>
+                  <select name="area" value={formData.area} onChange={handleChange} style={selectStyle}>
                     <option value="Matemática">Matemática</option>
                     <option value="Comunicación">Comunicación</option>
                     <option value="Ciencia y Tecnología">Ciencia y Tecnología</option>
@@ -200,14 +288,11 @@ const Dashboard = () => {
                     <option value="Educación para el Trabajo">Educación para el Trabajo</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Grado</label>
-                  <select
-                    name="grado"
-                    value={formData.grado}
-                    onChange={handleChange}
-                    className="w-full border-slate-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 8 }}>
+                    Grado
+                  </label>
+                  <select name="grado" value={formData.grado} onChange={handleChange} style={selectStyle}>
                     <option value="1ro">1ro de Secundaria</option>
                     <option value="2do">2do de Secundaria</option>
                     <option value="3ro">3ro de Secundaria</option>
@@ -217,14 +302,14 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Tema Curricular</label>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 8 }}>
+                  Tema Curricular
+                </label>
                 <select
-                  name="temaId"
-                  value={formData.temaId}
-                  onChange={handleChange}
-                  className="w-full border-slate-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-slate-100"
+                  name="temaId" value={formData.temaId} onChange={handleChange}
                   disabled={temasFiltrados.length === 0}
+                  style={{ ...selectStyle, opacity: temasFiltrados.length === 0 ? 0.5 : 1 }}
                 >
                   {temasFiltrados.length === 0 ? (
                     <option value="">No hay temas para esta área y grado</option>
@@ -236,88 +321,200 @@ const Dashboard = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Descripción Añadida</label>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#475569', marginBottom: 8 }}>
+                  Instrucciones Adicionales
+                </label>
                 <textarea
                   name="descripcion"
                   value={formData.descripcion}
                   onChange={handleChange}
                   rows="3"
-                  className="w-full border-slate-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="Ej: Enfocarse en ejemplos de la vida diaria, usar temática espacial, etc."
-                ></textarea>
+                  placeholder="Ej: Enfocarse en ejemplos cotidianos, usar temática espacial..."
+                  style={{
+                    ...selectStyle,
+                    resize: 'vertical',
+                    backgroundImage: 'none',
+                  }}
+                />
               </div>
 
               <button
                 type="submit"
                 disabled={generando}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none disabled:bg-slate-400"
+                style={{
+                  width: '100%', padding: '16px',
+                  background: generando ? '#94a3b8' : '#0f172a',
+                  color: '#fff', border: 'none', borderRadius: 14,
+                  fontSize: 15, fontWeight: 700,
+                  cursor: generando ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                  transition: 'all 0.2s ease',
+                  boxShadow: generando ? 'none' : '0 4px 14px rgba(15,23,42,0.2)',
+                }}
+                onMouseEnter={e => { if (!generando) e.currentTarget.style.background = '#1e293b'; }}
+                onMouseLeave={e => { if (!generando) e.currentTarget.style.background = '#0f172a'; }}
               >
+                <Zap style={{ width: 18, height: 18 }} />
                 {generando ? 'Generando con IA...' : 'Generar Actividad'}
               </button>
             </form>
           </div>
         </div>
 
-        {/* Columna Derecha: Historial */}
-        <div className="md:w-2/3">
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-200">
-              <h3 className="text-lg leading-6 font-medium text-slate-900">Historial de Actividades</h3>
+        {/* ── Columna Derecha: Historial ── */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            background: '#fff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 20,
+            overflow: 'hidden',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}>
+            <div style={{
+              padding: '20px 28px',
+              borderBottom: '1px solid #f1f5f9',
+              display: 'flex', alignItems: 'center', gap: 10,
+            }}>
+              <Clock style={{ width: 18, height: 18, color: '#94a3b8' }} />
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                Historial de Actividades
+              </h3>
+              <span style={{
+                marginLeft: 'auto', background: '#f1f5f9',
+                padding: '4px 10px', borderRadius: 8,
+                fontSize: 12, fontWeight: 700, color: '#64748b',
+              }}>
+                {historial.length} total
+              </span>
             </div>
-            
+
             {deleteMsg && (
-              <div className="px-6 py-3 bg-red-50 text-red-700 border-b border-red-100 text-sm font-medium">
+              <div style={{
+                padding: '12px 28px', background: '#fef2f2',
+                borderBottom: '1px solid #fecaca', fontSize: 13, fontWeight: 600, color: '#dc2626',
+              }}>
                 {deleteMsg}
               </div>
             )}
-            
+
             {loading ? (
-              <div className="p-6 text-center text-slate-500">Cargando historial...</div>
+              <div style={{ padding: 48, textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+                Cargando historial...
+              </div>
             ) : historial.length === 0 ? (
-              <div className="p-6 text-center text-slate-500">No has generado ninguna actividad aún.</div>
+              <div style={{ padding: 48, textAlign: 'center' }}>
+                <Gamepad2 style={{ width: 48, height: 48, color: '#cbd5e1', margin: '0 auto 16px' }} />
+                <p style={{ color: '#94a3b8', fontSize: 15, fontWeight: 600 }}>
+                  No has generado ninguna actividad aún.
+                </p>
+                <p style={{ color: '#cbd5e1', fontSize: 13, marginTop: 4 }}>
+                  Usa el formulario de la izquierda para crear tu primera.
+                </p>
+              </div>
             ) : (
-              <ul className="divide-y divide-slate-200">
-                {historial.map((act) => (
-                  <li key={act.id} className="hover:bg-slate-50 transition-colors">
-                    <div className="px-6 py-4 flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-indigo-600 truncate">{act.titulo}</p>
-                        <p className="text-sm text-slate-500">
-                          <span className="font-semibold text-slate-700">{act.tipoMotor}</span> • 
-                          Token: <span className="font-mono bg-slate-100 px-1 rounded">{act.tokenCorto}</span> • 
-                          {new Date(act.createdAt).toLocaleDateString()}
-                        </p>
+              <div>
+                {historial.map((act, idx) => {
+                  const motorInfo = MOTOR_INFO[act.tipoMotor] || { icon: '🎮', color: '#6366f1', label: act.tipoMotor };
+                  return (
+                    <div
+                      key={act.id}
+                      style={{
+                        padding: '18px 28px',
+                        borderBottom: idx < historial.length - 1 ? '1px solid #f1f5f9' : 'none',
+                        display: 'flex', alignItems: 'center', gap: 16,
+                        transition: 'background 0.15s ease',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#fafafa'}
+                      onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                    >
+                      <div style={{
+                        width: 44, height: 44, borderRadius: 12,
+                        background: `${motorInfo.color}15`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 22, flexShrink: 0,
+                      }}>
+                        {motorInfo.icon}
                       </div>
-                      <div className="flex space-x-2">
-                        <a 
-                          href={`/play/${act.tokenCorto}`} 
-                          target="_blank" 
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          fontSize: 15, fontWeight: 700, color: '#0f172a',
+                          margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {act.titulo}
+                        </p>
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          fontSize: 13, color: '#94a3b8', marginTop: 4,
+                        }}>
+                          <span style={{
+                            background: `${motorInfo.color}18`, color: motorInfo.color,
+                            padding: '2px 8px', borderRadius: 6, fontWeight: 700, fontSize: 12,
+                          }}>
+                            {motorInfo.label}
+                          </span>
+                          <span style={{
+                            fontFamily: 'monospace', background: '#f1f5f9',
+                            padding: '2px 6px', borderRadius: 4, fontSize: 12,
+                          }}>
+                            {act.tokenCorto}
+                          </span>
+                          <span>{new Date(act.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                        <a
+                          href={`/play/${act.tokenCorto}`}
+                          target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none"
                           title="Jugar"
+                          style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            background: '#10b981', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s ease',
+                            boxShadow: '0 2px 6px rgba(16,185,129,0.3)',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                         >
-                          <Play className="h-4 w-4" />
+                          <Play style={{ width: 16, height: 16, color: '#fff' }} />
                         </a>
-                        <button 
+                        <button
                           onClick={() => handleExportar(act.id, act.titulo)}
-                          className="inline-flex items-center p-2 border border-slate-300 rounded-full shadow-sm text-slate-700 bg-white hover:bg-slate-50 focus:outline-none"
                           title="Exportar DOCX"
+                          style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            background: '#fff', border: '2px solid #e2e8f0',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = '#6366f1'}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}
                         >
-                          <Download className="h-4 w-4" />
+                          <Download style={{ width: 16, height: 16, color: '#64748b' }} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleEliminar(act.id)}
-                          className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none ml-2"
-                          title="Eliminar Actividad"
+                          title="Eliminar"
+                          style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            background: '#fff', border: '2px solid #e2e8f0',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.background = '#fef2f2'; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#fff'; }}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 style={{ width: 16, height: 16, color: '#ef4444' }} />
                         </button>
                       </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
