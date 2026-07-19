@@ -8,6 +8,8 @@ export const useGameStore = create((set, get) => ({
   currentQuestion: null,
   doors: [], // Array of objects { answer: string, correct: boolean, position: string }
   enemiesAlive: 0,
+  aciertos: 0,
+  errores: 0,
   
   setRoomState: (state) => set({ roomState: state }),
   
@@ -25,7 +27,7 @@ export const useGameStore = create((set, get) => ({
       }));
     }
     
-    set({ questions: qs, roomsCleared: 0, roomState: 'QUESTION' });
+    set({ questions: qs, roomsCleared: 0, roomState: 'QUESTION', aciertos: 0, errores: 0 });
     get().loadRoom(0);
   },
 
@@ -69,9 +71,11 @@ export const useGameStore = create((set, get) => ({
     if (roomState !== 'QUESTION') return;
     
     if (isCorrect) {
+      set(state => ({ aciertos: state.aciertos + 1 }));
       usePlayerStore.getState().applyRandomBonus();
       get().loadRoom(roomsCleared + 1, false);
     } else {
+      set(state => ({ errores: state.errores + 1 }));
       // Advance to next room immediately but penalized (HOSTILE with no doors)
       get().loadRoom(roomsCleared + 1, true);
     }

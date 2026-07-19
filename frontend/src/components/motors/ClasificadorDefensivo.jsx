@@ -5,22 +5,26 @@ const COLS = 20;
 const ROWS = 15;
 const CELL_SIZE = 40;
 const MAX_TOWERS = 15;
-const MAX_WAVES = 10;
+const MAX_WAVES = 8;
 
-const PATH = [
-  { x: 0, y: 2 },
-  { x: 17, y: 2 },
-  { x: 17, y: 6 },
-  { x: 2, y: 6 },
-  { x: 2, y: 12 },
-  { x: 18, y: 12 } 
+const PATH_POOL_LEFT = [
+  [{ x: -1, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 12 }, { x: 8, y: 12 }, { x: 8, y: 7 }, { x: 10, y: 7 }],
+  [{ x: -1, y: 12 }, { x: 3, y: 12 }, { x: 3, y: 3 }, { x: 8, y: 3 }, { x: 8, y: 7 }, { x: 10, y: 7 }]
+];
+const PATH_POOL_RIGHT = [
+  [{ x: 20, y: 12 }, { x: 15, y: 12 }, { x: 15, y: 2 }, { x: 12, y: 2 }, { x: 12, y: 7 }, { x: 10, y: 7 }],
+  [{ x: 20, y: 2 }, { x: 16, y: 2 }, { x: 16, y: 11 }, { x: 12, y: 11 }, { x: 12, y: 7 }, { x: 10, y: 7 }]
+];
+const PATH_POOL_TOP_BOTTOM = [
+  [{ x: 10, y: -1 }, { x: 10, y: 2 }, { x: 2, y: 2 }, { x: 2, y: 7 }, { x: 10, y: 7 }],
+  [{ x: 10, y: 15 }, { x: 10, y: 12 }, { x: 18, y: 12 }, { x: 18, y: 7 }, { x: 10, y: 7 }]
 ];
 
 const MAX_HP = 100;
 const TOWER_TYPES = {
-  'laser': { cost: 50, baseDmg: 40, baseRange: 100, baseCooldown: 40, color: '#3b82f6', label: 'Láser', type: 'single' },
-  'escopeta': { cost: 200, baseDmg: 30, baseRange: 75, baseCooldown: 50, color: '#f97316', label: 'Escopeta', type: 'spread' },
-  'ballesta': { cost: 450, baseDmg: 20, baseRange: 180, baseCooldown: 10, color: '#10b981', label: 'Ballesta', type: 'fast' }
+  'laser': { cost: 60, baseDmg: 80, baseRange: 130, baseCooldown: 30, color: '#3b82f6', label: 'Láser', type: 'single' },
+  'escopeta': { cost: 200, baseDmg: 60, baseRange: 95, baseCooldown: 40, color: '#f97316', label: 'Escopeta', type: 'spread' },
+  'ballesta': { cost: 450, baseDmg: 40, baseRange: 220, baseCooldown: 8, color: '#10b981', label: 'Ballesta', type: 'fast' }
 };
 
 const getUpgradeCost = (type, level) => {
@@ -30,7 +34,7 @@ const getUpgradeCost = (type, level) => {
   return Infinity;
 };
 
-const ClasificadorDefensivo = ({ data }) => {
+const ClasificadorDefensivo = ({ data, onGameEnd }) => {
   const [fase, setFase] = useState('CINEMATICA_INICIAL'); 
   const [triviaIndex, setTriviaIndex] = useState(0);
   const [preguntasTrivia] = useState(data.preguntasTrivia || []);
@@ -40,6 +44,7 @@ const ClasificadorDefensivo = ({ data }) => {
   const [hpUI, setHpUI] = useState(MAX_HP);
   const [oleadaUI, setOleadaUI] = useState(1);
   const [panicUsado, setPanicUsado] = useState(false);
+  const [panicTimerUI, setPanicTimerUI] = useState(0);
   
   const [selectedCell, setSelectedCell] = useState(null); 
   const [selectedTowerTypeUI, setSelectedTowerTypeUI] = useState('laser'); 
@@ -47,6 +52,20 @@ const ClasificadorDefensivo = ({ data }) => {
 
   const canvasRef = useRef(null);
   const requestRef = useRef(null);
+  
+  const initialActivePaths = [];
+  initialActivePaths.push(PATH_POOL_LEFT[Math.floor(Math.random() * PATH_POOL_LEFT.length)]);
+  initialActivePaths.push(PATH_POOL_RIGHT[Math.floor(Math.random() * PATH_POOL_RIGHT.length)]);
+  if (Math.random() > 0.5) initialActivePaths.push(PATH_POOL_TOP_BOTTOM[Math.floor(Math.random() * PATH_POOL_TOP_BOTTOM.length)]);
+
+  const initialDecorations = [];
+  for(let i=0; i<40; i++) {
+     initialDecorations.push({
+        x: Math.floor(Math.random() * COLS), 
+        y: Math.floor(Math.random() * ROWS),
+        type: Math.floor(Math.random() * 3)
+     });
+  }
   
   const gameState = useRef({
     energia: 0,
@@ -62,8 +81,15 @@ const ClasificadorDefensivo = ({ data }) => {
     enemigosRestantesOleada: 15,
     faseActiva: false,
     shakeTimer: 0,
+    panicTimer: 0,
+    triggerBonus: false,
+    bonusCount: 0,
     hoveredCell: null,
-    tipoAConstruir: 'laser'
+    activePaths: initialActivePaths,
+    decoraciones: initialDecorations,
+    tipoAConstruir: 'laser',
+    aciertos: 0,
+    errores: 0
   });
 
   const cambiarTipoTorre = (tipo) => {
@@ -77,19 +103,32 @@ const ClasificadorDefensivo = ({ data }) => {
       setHpUI(Math.max(0, gameState.current.hp));
       setOleadaUI(gameState.current.oleada);
       setTorresCount(gameState.current.torres.length);
+      setPanicTimerUI(gameState.current.panicTimer);
       
       if (gameState.current.hp <= 0 && gameState.current.faseActiva) {
         gameState.current.faseActiva = false;
         setFase('GAME_OVER');
+        if (onGameEnd) onGameEnd({ aciertos: gameState.current.aciertos, errores: gameState.current.errores });
       } else if (gameState.current.oleada > MAX_WAVES && gameState.current.enemigos.length === 0 && gameState.current.enemigosRestantesOleada === 0) {
         gameState.current.faseActiva = false;
         setFase('VICTORIA');
+        if (onGameEnd) onGameEnd({ aciertos: gameState.current.aciertos, errores: gameState.current.errores });
       }
     }, 100);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
+    if (fase === 'PREGUNTA_BONUS_TRANSITION') {
+      const timer = setTimeout(() => setFase('TRIVIA_BONUS'), 1500);
+      return () => clearTimeout(timer);
+    }
+    if (fase === 'RONDA_TERMINADA') {
+      const timer = setTimeout(() => {
+        setFase('TRANSICION_TRIVIA');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
     if (fase === 'TRANSICION_TRIVIA') {
       const timer = setTimeout(() => {
         if (gameState.current.oleada === 1) {
@@ -125,11 +164,19 @@ const ClasificadorDefensivo = ({ data }) => {
     const preguntaActual = preguntasTrivia[triviaIndex % preguntasTrivia.length];
     const esCorrecta = opcionIndex === preguntaActual.respuesta;
     
-    if (fase === 'TRIVIA_INICIAL' || fase === 'TRIVIA_INTER_OLEADA') {
-      if (esCorrecta) gameState.current.energia += 50;
+    if (esCorrecta) {
+      gameState.current.aciertos++;
+    } else {
+      gameState.current.errores++;
+    }
+    
+    if (fase === 'TRIVIA_INICIAL' || fase === 'TRIVIA_INTER_OLEADA' || fase === 'TRIVIA_BONUS') {
+      if (esCorrecta) gameState.current.energia += (fase === 'TRIVIA_BONUS' ? 100 : 200);
       
       const respondidas = preguntasRespondidasEnFase + 1;
-      if (respondidas < 3 && triviaIndex < preguntasTrivia.length - 1) {
+      const limite = fase === 'TRIVIA_BONUS' ? 1 : 2;
+      
+      if (respondidas < limite && triviaIndex < preguntasTrivia.length - 1) {
         setPreguntasRespondidasEnFase(respondidas);
         setTriviaIndex(triviaIndex + 1);
       } else {
@@ -139,31 +186,26 @@ const ClasificadorDefensivo = ({ data }) => {
         setFase('PLAYING');
         gameState.current.faseActiva = true;
       }
-    } else if (fase === 'PANIC') {
-      if (esCorrecta) gameState.current.energia += 250; 
-      gameState.current.shakeTimer = 15; 
-      setEnergiaUI(gameState.current.energia);
-      setFase('PLAYING');
-      gameState.current.faseActiva = true;
     }
   };
 
   const usarBotonPanico = () => {
-    if (panicUsado || gameState.current.enemigos.length === 0) return;
+    if (panicUsado || !gameState.current.faseActiva) return;
     setPanicUsado(true);
-    gameState.current.faseActiva = false;
-    setFase('PANIC');
+    gameState.current.panicTimer = 900;
   };
 
   const isPathCell = (cx, cy) => {
-    for (let i = 0; i < PATH.length - 1; i++) {
-      const p1 = PATH[i];
-      const p2 = PATH[i+1];
-      const minX = Math.min(p1.x, p2.x);
-      const maxX = Math.max(p1.x, p2.x);
-      const minY = Math.min(p1.y, p2.y);
-      const maxY = Math.max(p1.y, p2.y);
-      if (cx >= minX && cx <= maxX && cy >= minY && cy <= maxY) return true;
+    for (const path of gameState.current.activePaths) {
+      for (let i = 0; i < path.length - 1; i++) {
+        const p1 = path[i];
+        const p2 = path[i+1];
+        const minX = Math.min(p1.x, p2.x);
+        const maxX = Math.max(p1.x, p2.x);
+        const minY = Math.min(p1.y, p2.y);
+        const maxY = Math.max(p1.y, p2.y);
+        if (cx >= minX && cx <= maxX && cy >= minY && cy <= maxY) return true;
+      }
     }
     return false;
   };
@@ -179,18 +221,54 @@ const ClasificadorDefensivo = ({ data }) => {
     for (let x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x * CELL_SIZE, 0); ctx.lineTo(x * CELL_SIZE, 600); ctx.stroke(); }
     for (let y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * CELL_SIZE); ctx.lineTo(800, y * CELL_SIZE); ctx.stroke(); }
 
+    ctx.fillStyle = '#0f172a';
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 2;
+    gameState.current.decoraciones.forEach(dec => {
+       const dx = dec.x * CELL_SIZE; const dy = dec.y * CELL_SIZE;
+       if (!isPathCell(dec.x, dec.y) && !gameState.current.torres.some(t => t.x === dec.x && t.y === dec.y)) {
+         if (dec.type === 0) { ctx.beginPath(); ctx.arc(dx + 10, dy + 10, 3, 0, Math.PI*2); ctx.fill(); }
+         else if (dec.type === 1) { ctx.beginPath(); ctx.moveTo(dx + 5, dy + 20); ctx.lineTo(dx + 25, dy + 20); ctx.stroke(); }
+         else { ctx.strokeRect(dx + 15, dy + 15, 10, 10); }
+       }
+    });
+
     ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 24; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.shadowColor = '#0ea5e9'; ctx.shadowBlur = 15;
     
-    ctx.beginPath(); ctx.moveTo(PATH[0].x * CELL_SIZE + CELL_SIZE/2, PATH[0].y * CELL_SIZE + CELL_SIZE/2);
-    for (let i = 1; i < PATH.length; i++) ctx.lineTo(PATH[i].x * CELL_SIZE + CELL_SIZE/2, PATH[i].y * CELL_SIZE + CELL_SIZE/2);
-    ctx.stroke();
+    gameState.current.activePaths.forEach(path => {
+      ctx.beginPath(); ctx.moveTo(path[0].x * CELL_SIZE + CELL_SIZE/2, path[0].y * CELL_SIZE + CELL_SIZE/2);
+      for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x * CELL_SIZE + CELL_SIZE/2, path[i].y * CELL_SIZE + CELL_SIZE/2);
+      ctx.stroke();
+    });
     
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.shadowBlur = 5; ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.shadowBlur = 5;
+    gameState.current.activePaths.forEach(path => {
+      ctx.beginPath(); ctx.moveTo(path[0].x * CELL_SIZE + CELL_SIZE/2, path[0].y * CELL_SIZE + CELL_SIZE/2);
+      for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x * CELL_SIZE + CELL_SIZE/2, path[i].y * CELL_SIZE + CELL_SIZE/2);
+      ctx.stroke();
+    });
+    ctx.shadowBlur = 0;
 
-    const end = PATH[PATH.length - 1];
-    const nx = end.x * CELL_SIZE + CELL_SIZE/2;
-    const ny = end.y * CELL_SIZE + CELL_SIZE/2;
+    gameState.current.activePaths.forEach(path => {
+      if (path.length > 1) {
+        const sx = path[0].x * CELL_SIZE + CELL_SIZE/2;
+        const sy = path[0].y * CELL_SIZE + CELL_SIZE/2;
+        const nx = path[1].x * CELL_SIZE + CELL_SIZE/2;
+        const ny = path[1].y * CELL_SIZE + CELL_SIZE/2;
+        const angle = Math.atan2(ny - sy, nx - sx);
+        
+        const arrowOffset = (gameState.current.frame % 30) - 15;
+        ctx.save(); ctx.translate(sx + Math.cos(angle)*arrowOffset, sy + Math.sin(angle)*arrowOffset); ctx.rotate(angle);
+        ctx.fillStyle = 'rgba(14, 165, 233, 0.8)'; ctx.shadowColor = '#0ea5e9'; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(20, 0); ctx.lineTo(0, 10); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+    });
+
+    const base = {x: 10, y: 7};
+    const nx = base.x * CELL_SIZE + CELL_SIZE/2;
+    const ny = base.y * CELL_SIZE + CELL_SIZE/2;
     
     const isGlitch = gameState.current.shakeTimer > 0;
     ctx.shadowColor = isGlitch ? '#ef4444' : '#a855f7';
@@ -231,41 +309,76 @@ const ClasificadorDefensivo = ({ data }) => {
     }
 
     if (state.faseActiva) {
+      if (state.panicTimer > 0 && state.enemigos.length > 0) state.panicTimer--;
+
       if (state.enemigosRestantesOleada > 0 && state.spawnTimer <= 0) {
         const rand = Math.random();
-        let tipo = 'NORMAL', speed = 1.2, hp = 40 + (state.oleada * 40), color = '#ef4444', radius = 12;
+        let tipo = 'NORMAL', speed = 1.8, hp = 60 + (state.oleada * 50), color = '#ef4444', radius = 12;
         
-        if (state.oleada >= 2 && rand > 0.4 && rand <= 0.7) { tipo = 'SWARM'; speed = 2.5; hp = 25; color = '#f59e0b'; radius = 8; }
-        else if (state.oleada >= 2 && rand > 0.7) { tipo = 'GLITCH'; speed = 3.5; hp = 20; color = '#2dd4bf'; radius = 10; }
-        else if (state.oleada >= 3 && rand > 0.6) { tipo = 'TANK'; speed = 0.5; hp = 300; color = '#991b1b'; radius = 18; }
+        const waveMaxEnemies = 25 + (state.oleada * 15);
+        const isWave8BossTime = (state.oleada === 8 && state.enemigosRestantesOleada === waveMaxEnemies);
+        const isWave4MinibossTime = (state.oleada === 4 && state.enemigosRestantesOleada === Math.floor(waveMaxEnemies / 2));
+        
+        if (isWave8BossTime) {
+           tipo = 'BOSS'; speed = 0.5; hp = (300 + (8 * 80)) * 3; color = '#7e22ce'; radius = 35;
+        } else if (isWave4MinibossTime) {
+           tipo = 'MINIBOSS'; speed = 1.2; hp = 1000; color = '#d946ef'; radius = 24;
+        } else {
+           if (state.oleada >= 2 && rand > 0.3 && rand <= 0.5) { tipo = 'SWARM'; speed = 3.5; hp = 40; color = '#f59e0b'; radius = 8; }
+           else if (state.oleada >= 2 && rand > 0.5 && rand <= 0.65) { tipo = 'GLITCH'; speed = 4.5; hp = 35; color = '#2dd4bf'; radius = 10; }
+           else if (state.oleada >= 3 && rand > 0.65 && rand <= 0.75) { tipo = 'STEALTH'; speed = 2.5; hp = 80; color = '#94a3b8'; radius = 10; }
+           else if (state.oleada >= 3 && rand > 0.75 && rand <= 0.85) { tipo = 'TANK'; speed = 0.8; hp = 400 + (state.oleada * 100); color = '#991b1b'; radius = 18; }
+           else if (state.oleada >= 4 && rand > 0.85 && rand <= 0.93) { tipo = 'SPLITTER'; speed = 1.2; hp = 200 + (state.oleada * 50); color = '#ec4899'; radius = 14; }
+           else if (state.oleada >= 4 && rand > 0.93) { tipo = 'ELITE'; speed = 1.5; hp = 600 + (state.oleada * 150); color = '#fbbf24'; radius = 15; }
+        }
 
-        state.enemigos.push({ tipo, x: PATH[0].x * CELL_SIZE + CELL_SIZE/2, y: PATH[0].y * CELL_SIZE + CELL_SIZE/2, targetIdx: 1, hp, maxHp: hp, speed, color, radius });
+        const pathIdx = Math.floor(Math.random() * state.activePaths.length);
+        const spawnPath = state.activePaths[pathIdx];
+
+        state.enemigos.push({ tipo, x: spawnPath[0].x * CELL_SIZE + CELL_SIZE/2, y: spawnPath[0].y * CELL_SIZE + CELL_SIZE/2, targetIdx: 1, pathIdx, hp, maxHp: hp, speed, color, radius });
         state.enemigosRestantesOleada--;
-        state.spawnTimer = tipo === 'SWARM' || tipo === 'GLITCH' ? 10 : 40; 
+        
+        let st = 20;
+        if (tipo === 'SWARM' || tipo === 'GLITCH') st = 5;
+        else if (tipo === 'STEALTH') st = 12;
+        else if (tipo === 'SPLITTER') st = 25;
+        state.spawnTimer = st; 
       } else state.spawnTimer--;
 
       if (state.enemigosRestantesOleada === 0 && state.enemigos.length === 0) {
         if (state.oleada < MAX_WAVES) {
-          if (state.oleada === 3 || state.oleada === 6 || state.oleada === 9) {
+          if (state.oleada % 2 === 0) {
             state.faseActiva = false; 
-            setFase('TRANSICION_TRIVIA');
+            setFase('RONDA_TERMINADA');
+            state.oleada++;
+            state.enemigosRestantesOleada = 25 + (state.oleada * 15);
+            state.spawnTimer = 60;
+          } else {
+            state.oleada++;
+            state.enemigosRestantesOleada = 25 + (state.oleada * 15);
+            state.spawnTimer = 60;
+            spawnFloatingText(400, 300, `¡OLEADA ${state.oleada}!`, '#3b82f6', 40);
           }
-          state.oleada++;
-          state.enemigosRestantesOleada = 15 + (state.oleada * 10);
-          state.spawnTimer = 60;
         } else {
           state.faseActiva = false;
           setFase('VICTORIA');
         }
+      }
+      
+      if (state.triggerBonus) {
+        state.triggerBonus = false;
+        state.faseActiva = false;
+        setFase('PREGUNTA_BONUS_TRANSITION');
       }
     }
 
     for (let i = state.enemigos.length - 1; i >= 0; i--) {
       const e = state.enemigos[i];
       if (state.faseActiva) {
-        const targetNode = PATH[e.targetIdx];
+        const activePath = state.activePaths[e.pathIdx];
+        const targetNode = activePath[e.targetIdx];
         if (!targetNode) {
-          state.hp -= e.tipo === 'TANK' ? 20 : 10;
+          state.hp -= e.tipo === 'TANK' || e.tipo === 'BOSS' || e.tipo === 'MINIBOSS' ? 20 : 10;
           state.shakeTimer = 15; 
           spawnExplosion(e.x, e.y, '#ef4444', 30);
           spawnFloatingText(e.x, e.y - 20, '-10', '#ef4444', 20);
@@ -282,10 +395,19 @@ const ClasificadorDefensivo = ({ data }) => {
 
       ctx.save();
       ctx.translate(e.x, e.y);
-      if (e.tipo === 'GLITCH' && Math.random() > 0.6 && state.faseActiva) ctx.globalAlpha = 0.3;
+      if (e.tipo === 'STEALTH') ctx.globalAlpha = 0.5;
+      else if (e.tipo === 'GLITCH' && Math.random() > 0.6 && state.faseActiva) ctx.globalAlpha = 0.3;
       ctx.shadowColor = e.color; ctx.shadowBlur = 10;
       
-      if (e.tipo === 'TANK') {
+      if (e.tipo === 'ELITE') {
+        ctx.fillStyle = e.color; ctx.beginPath(); ctx.moveTo(0, -e.radius); ctx.lineTo(e.radius, 0); ctx.lineTo(0, e.radius); ctx.lineTo(-e.radius, 0); ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+      } else if (e.tipo === 'SPLITTER') {
+        ctx.fillStyle = e.color; ctx.beginPath(); ctx.moveTo(0, -e.radius); ctx.lineTo(e.radius, 0); ctx.lineTo(0, e.radius); ctx.lineTo(-e.radius, 0); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
+      } else if (e.tipo === 'STEALTH') {
+        ctx.fillStyle = e.color; ctx.beginPath(); ctx.moveTo(e.radius, 0); ctx.lineTo(-e.radius, e.radius); ctx.lineTo(-e.radius, -e.radius); ctx.fill();
+      } else if (e.tipo === 'TANK' || e.tipo === 'BOSS' || e.tipo === 'MINIBOSS') {
         ctx.fillStyle = e.color; ctx.fillRect(-e.radius, -e.radius, e.radius*2, e.radius*2);
         ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.strokeRect(-e.radius, -e.radius, e.radius*2, e.radius*2);
       } else if (e.tipo === 'SWARM') {
@@ -331,29 +453,52 @@ const ClasificadorDefensivo = ({ data }) => {
               });
             }
 
-            state.enemigos.forEach((en, idx) => {
-              if (en.hp <= 0 && en === objetivo) { 
-                const reward = en.tipo === 'TANK' ? 10 : 5; 
+            for (let i = state.enemigos.length - 1; i >= 0; i--) {
+              const en = state.enemigos[i];
+              if (en.hp <= 0) { 
+                if (en.tipo === 'SPLITTER') {
+                  state.enemigos.push({ tipo: 'SWARM', x: en.x - 8, y: en.y - 8, targetIdx: en.targetIdx, pathIdx: en.pathIdx, hp: 40, maxHp: 40, speed: 3.5, color: '#f59e0b', radius: 8 });
+                  state.enemigos.push({ tipo: 'SWARM', x: en.x + 8, y: en.y + 8, targetIdx: en.targetIdx, pathIdx: en.pathIdx, hp: 40, maxHp: 40, speed: 3.5, color: '#f59e0b', radius: 8 });
+                }
+                
+                let baseReward = 1;
+                if (en.tipo === 'GLITCH') baseReward = 3;
+                else if (en.tipo === 'STEALTH' || en.tipo === 'SPLITTER') baseReward = 4;
+                else if (en.tipo === 'TANK') baseReward = 5;
+                else if (en.tipo === 'ELITE') baseReward = 15;
+                else if (en.tipo === 'MINIBOSS') baseReward = 50;
+                else if (en.tipo === 'BOSS') baseReward = 100;
+                
+                const multiplier = state.panicTimer > 0 ? 2 : 1;
+                const reward = baseReward * multiplier; 
                 state.energia += reward; 
                 spawnExplosion(en.x, en.y, en.color, 20); 
                 spawnFloatingText(en.x, en.y - 15, `+${reward}`, '#4ade80', 16);
-                state.enemigos.splice(idx, 1);
+                state.enemigos.splice(i, 1);
+                
+                if (Math.random() < 0.05 && state.oleada > 1 && state.bonusCount < 2 && !state.triggerBonus) {
+                  state.triggerBonus = true;
+                  state.bonusCount++;
+                }
               }
-            });
+            }
           }
         }
         if (t.cooldown > 0) t.cooldown--;
         if (t.attackState > 0) t.attackState--;
       }
 
-      const isSelected = selectedCell && selectedCell.x === t.x && selectedCell.y === t.y;
+      const hc = state.hoveredCell;
+      const isHovered = hc && hc.x === t.x && hc.y === t.y;
 
       ctx.fillStyle = '#0f172a'; ctx.fillRect(t.x * CELL_SIZE + 4, t.y * CELL_SIZE + 4, CELL_SIZE - 8, CELL_SIZE - 8);
       ctx.strokeStyle = typeData.color; ctx.lineWidth = 2; ctx.strokeRect(t.x * CELL_SIZE + 4, t.y * CELL_SIZE + 4, CELL_SIZE - 8, CELL_SIZE - 8);
       
-      ctx.beginPath(); ctx.arc(tx, ty, range, 0, Math.PI * 2);
-      ctx.fillStyle = isSelected ? `${typeData.color}20` : `${typeData.color}05`; ctx.fill();
-      ctx.strokeStyle = isSelected ? `${typeData.color}80` : `${typeData.color}20`; ctx.stroke();
+      if (isHovered) {
+        ctx.beginPath(); ctx.arc(tx, ty, range, 0, Math.PI * 2);
+        ctx.fillStyle = `${typeData.color}20`; ctx.fill();
+        ctx.strokeStyle = `${typeData.color}80`; ctx.stroke();
+      }
 
       ctx.save(); ctx.translate(tx, ty); ctx.rotate(t.angle || 0);
       const recoil = t.attackState > 0 ? -4 : 0; 
@@ -425,8 +570,11 @@ const ClasificadorDefensivo = ({ data }) => {
     }
 
     if (selectedCell && selectedCell.hasTower) {
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
-      ctx.strokeRect(selectedCell.x * CELL_SIZE, selectedCell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE); ctx.setLineDash([]);
+      ctx.shadowColor = '#0ea5e9';
+      ctx.shadowBlur = 15;
+      ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 3;
+      ctx.strokeRect(selectedCell.x * CELL_SIZE + 2, selectedCell.y * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4); 
+      ctx.shadowBlur = 0;
     }
 
     ctx.restore(); 
@@ -541,10 +689,15 @@ const ClasificadorDefensivo = ({ data }) => {
           </div>
           <button 
             onClick={usarBotonPanico}
-            disabled={panicUsado || gameState.current.enemigos.length === 0}
-            className="flex items-center gap-1 px-4 py-1 bg-red-600 hover:bg-red-500 disabled:bg-slate-800 disabled:text-slate-600 rounded font-bold text-sm transition-colors"
+            disabled={(panicUsado && panicTimerUI <= 0) || gameState.current.enemigos.length === 0}
+            className={`flex items-center gap-1 px-4 py-1 rounded font-bold text-sm transition-colors ${
+              panicTimerUI > 0 
+                ? 'bg-yellow-500 hover:bg-yellow-400 text-black shadow-[0_0_15px_#eab308]' 
+                : 'bg-red-600 hover:bg-red-500 disabled:bg-slate-800 disabled:text-slate-600 text-white'
+            }`}
           >
-            <ShieldAlert className="w-4 h-4" /> PÁNICO
+            <ShieldAlert className="w-4 h-4" /> 
+            {panicTimerUI > 0 ? `DOBLE BITS (${Math.ceil(panicTimerUI / 60)}s)` : 'ACTIVAR BITS DOBLES'}
           </button>
         </div>
       </div>
@@ -571,6 +724,23 @@ const ClasificadorDefensivo = ({ data }) => {
           </div>
         )}
 
+        {fase === 'PREGUNTA_BONUS_TRANSITION' && (
+          <div className="absolute inset-0 flex items-center justify-center flex-col z-30 bg-purple-950/90 backdrop-blur-md animate-in zoom-in duration-300">
+            <h1 className="text-7xl font-black text-fuchsia-400 tracking-widest drop-shadow-[0_0_30px_rgba(217,70,239,0.8)] text-center animate-pulse">
+              ¡PREGUNTA BONUS!
+            </h1>
+          </div>
+        )}
+
+        {fase === 'RONDA_TERMINADA' && (
+          <div className="absolute inset-0 flex items-center justify-center flex-col z-30 bg-slate-950/90 backdrop-blur-md animate-in zoom-in duration-300">
+            <h1 className="text-6xl font-black text-green-400 tracking-widest drop-shadow-[0_0_20px_rgba(74,222,128,0.8)] text-center">
+              ¡OLEADA SUPERADA!
+            </h1>
+            <p className="mt-4 text-green-200 font-mono text-xl animate-pulse">Iniciando protocolo de trivia...</p>
+          </div>
+        )}
+
         {/* TRANSICIÓN TRIVIA ANIMADA */}
         {fase === 'TRANSICION_TRIVIA' && (
           <div className="absolute inset-0 flex items-center justify-center flex-col z-30 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-500">
@@ -581,15 +751,15 @@ const ClasificadorDefensivo = ({ data }) => {
           </div>
         )}
 
-        {(fase === 'TRIVIA_INICIAL' || fase === 'TRIVIA_INTER_OLEADA') && currentQuestion && (
+        {(fase === 'TRIVIA_INICIAL' || fase === 'TRIVIA_INTER_OLEADA' || fase === 'TRIVIA_BONUS') && currentQuestion && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 p-4 z-20 backdrop-blur-md">
             <div className="bg-slate-900 border-2 border-blue-500 rounded-xl p-6 max-w-md w-full text-center shadow-2xl">
               <Zap className="w-10 h-10 text-yellow-400 mx-auto mb-2" />
               <h2 className="text-xl font-bold text-blue-400 mb-1">
-                {fase === 'TRIVIA_INICIAL' ? 'CARGA DE ENERGÍA' : `OLEADA ${oleadaUI - 1} SUPERADA`}
+                {fase === 'TRIVIA_BONUS' ? '¡PREGUNTA BONUS!' : (fase === 'TRIVIA_INICIAL' ? 'CARGA DE ENERGÍA' : `OLEADA ${oleadaUI - 1} SUPERADA`)}
               </h2>
               <p className="text-slate-400 text-xs mb-4 font-mono">
-                Pregunta {preguntasRespondidasEnFase + 1}/3 - (+50 BITS)
+                Pregunta {preguntasRespondidasEnFase + 1}/{fase === 'TRIVIA_BONUS' ? 1 : 2} - (+{fase === 'TRIVIA_BONUS' ? 100 : 200} BITS)
               </p>
               <p className="text-md text-white mb-6 font-medium">
                 {currentQuestion.pregunta}

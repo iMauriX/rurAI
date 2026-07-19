@@ -34,10 +34,11 @@ export const db = {
       dataIa: { 
         personajes: [{ nombre: 'Héroe', hp: 100 }, { nombre: 'Dragón', hp: 80 }], 
         escenas: [
-          { pregunta: '¿Cuánto es 6 + 7?', opciones: ['1/6', '3/4', '2/6'], respuesta: 1 },
-          { pregunta: '¿Cuánto es 2/3 - 1/3?', opciones: ['1/3', '1/6', '1/2'], respuesta: 0 }
+          { pregunta: '¿Cuánto es 1/2 + 1/4?', opciones: ['3/4', '1/6', '2/6', '1/2'], respuesta: 0 },
+          { pregunta: '¿Cuánto es 2/3 - 1/3?', opciones: ['1/3', '1/6', '1/2', '2/3'], respuesta: 0 }
         ] 
       },
+      scores: [],
       createdAt: new Date().toISOString()
     },
     { 
@@ -57,6 +58,7 @@ export const db = {
           { pregunta: '¿Qué tiempo es "Había comido"?', opciones: ['Pretérito pluscuamperfecto', 'Presente', 'Futuro'], respuesta: 0 }
         ] 
       },
+      scores: [],
       createdAt: new Date().toISOString()
     }
   ],

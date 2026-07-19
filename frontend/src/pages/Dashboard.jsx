@@ -155,7 +155,7 @@ const Dashboard = () => {
         }
       });
 
-      setSuccessMsg(`¡Actividad generada! Enlace: http://localhost:3000/play/${response.data.token}`);
+      setSuccessMsg(`¡Actividad generada! Enlace: ${window.location.origin}/play/${response.data.token}`);
 
       const historialRes = await api.get('/actividad/historial');
       setHistorial(historialRes.data.data);
@@ -218,7 +218,7 @@ const Dashboard = () => {
   };
 
   const handleShare = (act) => {
-    const playUrl = `http://localhost:3000/play/${act.tokenCorto}`;
+    const playUrl = `${window.location.origin}/play/${act.tokenCorto}`;
     const text = `¡Hola! Te comparto este divertido juego educativo de RurAI: "${act.titulo}". Entra aquí para jugar: ${playUrl}`;
     if (navigator.share) {
       navigator.share({
@@ -874,7 +874,7 @@ const Dashboard = () => {
                                   <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                     <div style={{ display: 'inline-flex', gap: 6 }}>
                                       <a
-                                        href={`http://localhost:3000/play/${act.tokenCorto}`}
+                                        href={`${window.location.origin}/play/${act.tokenCorto}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         title="Jugar"
@@ -1280,7 +1280,7 @@ const Dashboard = () => {
 
                           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                             <a
-                              href={`http://localhost:3000/play/${act.tokenCorto}`}
+                              href={`${window.location.origin}/play/${act.tokenCorto}`}
                               target="_blank"
                               rel="noreferrer"
                               title="Jugar"
