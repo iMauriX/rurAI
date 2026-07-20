@@ -176,8 +176,10 @@ const OptionBtn = ({ label, index, onClick, disabled, revealed }) => {
 ───────────────────────────────────────────── */
 const DueloDecisiones = ({ data, onGameEnd }) => {
   const stats = useRef({ aciertos: 0, errores: 0 });
-  const maxHpJugador = data.personajes[0]?.hp || 100;
-  const maxHpEnemigo = data.personajes[1]?.hp || 100;
+  const personajes = data?.personajes || [{ nombre: 'Estudiante', hp: 100 }, { nombre: 'Rival', hp: 100 }];
+  const escenas = data?.escenas?.length > 0 ? data.escenas : [{ pregunta: '¿Listo para aprender?', opciones: ['¡Sí!', 'Tal vez', 'No', 'Casi'], respuesta: 0 }];
+  const maxHpJugador = personajes[0]?.hp || 100;
+  const maxHpEnemigo = personajes[1]?.hp || 100;
 
   // Assets: fondo aleatorio, héroe y enemigo fijos
   const [bgUrl] = useState(() => BGS[Math.floor(Math.random() * BGS.length)]);
@@ -208,10 +210,10 @@ const DueloDecisiones = ({ data, onGameEnd }) => {
   const [dobleDaño, setDobleDaño] = useState(false);
   const [opReveal, setOpReveal] = useState(null);
 
-  const totalEscenas = data.escenas.length;
-  const escena = data.escenas[escenaIndex % totalEscenas];
+  const totalEscenas = escenas.length;
+  const escena = escenas[escenaIndex % totalEscenas];
 
-  const nombreJugador = data.personajes[0]?.nombre || 'Héroe';
+  const nombreJugador = personajes[0]?.nombre || 'Héroe';
   const nombreEnemigo = 'Monstruo'; // Forzar siempre el nombre Monstruo
 
   // Control de Cinemática Inicial
@@ -436,7 +438,7 @@ const DueloDecisiones = ({ data, onGameEnd }) => {
           gap: 30,
           alignItems: 'stretch',
           height: 250,
-          zIndex: 20,
+          zIndex: 100,
           animation: 'slide-up 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
         }}>
 

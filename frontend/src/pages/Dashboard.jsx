@@ -433,9 +433,15 @@ const Dashboard = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8' }}>Uso mensual</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>
-                {currentGenerations} / {maxGenerations === Infinity ? '∞' : maxGenerations}
-              </span>
+              {maxGenerations === Infinity ? (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: 6, padding: '2px 8px' }}>
+                  ✦ Ilimitado
+                </span>
+              ) : (
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>
+                  {currentGenerations} / {maxGenerations}
+                </span>
+              )}
             </div>
             {maxGenerations !== Infinity && (
               <div style={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, overflow: 'hidden', marginBottom: 12 }}>
