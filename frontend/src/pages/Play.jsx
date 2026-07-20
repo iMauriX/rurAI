@@ -360,9 +360,9 @@ const Play = () => {
       {isRegistered && gameState === 'playing' && (
         <div style={{ width: '100%', maxWidth: 860 }}>
           <Suspense fallback={<SkeletonLoader />}>
-            {actividad.tipoMotor === 'RPG' && <DueloDecisiones data={actividad.data} onGameEnd={handleGameEnd} />}
-            {actividad.tipoMotor === 'TD' && <ClasificadorDefensivo data={actividad.data} onGameEnd={handleGameEnd} />}
-            {actividad.tipoMotor === 'ACCION' && <DungeonCrawler data={actividad.data} onGameEnd={handleGameEnd} />}
+            {actividad.tipoMotor === 'RPG' && <DueloDecisiones data={actividad.dataIa} onGameEnd={handleGameEnd} />}
+            {actividad.tipoMotor === 'TD' && <ClasificadorDefensivo data={actividad.dataIa} onGameEnd={handleGameEnd} />}
+            {actividad.tipoMotor === 'ACCION' && <DungeonCrawler data={actividad.dataIa} onGameEnd={handleGameEnd} />}
           </Suspense>
         </div>
       )}
