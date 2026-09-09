@@ -11,6 +11,9 @@ Este repositorio contiene la implementación del **MVP (Producto Mínimo Viable)
 El proyecto aborda principalmente **el desinterés y la falta de motivación de los estudiantes en secundaria**. Para solucionar esto, RurAI facilita a los docentes la creación de herramientas de gamificación interactivas y atractivas, todo ello sin requerir conocimientos técnicos previos por parte del profesorado.
 
 ---
+## MVP
+ - [Repositorio](https://github.com/TomJordan1/mvp-rurAI)
+ - [Deploy](https://rurai-mvp.netlify.app)
 
 ## 💻 Stack Tecnológico
 
