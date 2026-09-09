@@ -4,6 +4,7 @@ import api from './api';
 import { 
   getUserByEmail, 
   getUserById, 
+  addUser,
   updateUserPlan,
   getActividades,
   getActivityById,
@@ -19,10 +20,29 @@ import {
 const mockApi = new MockAdapter(api, { delayResponse: 500 });
 const mockGlobal = new MockAdapter(axios, { delayResponse: 500 });
 
+const parseData = (data) => {
+  if (!data) return {};
+  if (typeof data === 'object') return data;
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    return {};
+  }
+};
+
+const getUserIdFromHeader = (authHeader) => {
+  if (!authHeader) return null;
+  const clean = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (clean.startsWith('fake-jwt-token-')) {
+    return clean.replace('fake-jwt-token-', '');
+  }
+  return clean;
+};
+
 const setupMocks = (mock) => {
   // AUTH
   mock.onPost(/\/auth\/login/).reply(config => {
-    const { correo, password } = JSON.parse(config.data);
+    const { correo, password } = parseData(config.data);
     const user = getUserByEmail(correo);
     if (user && user.password === password) {
       return [200, {
@@ -34,11 +54,30 @@ const setupMocks = (mock) => {
     return [401, { error: 'Credenciales inválidas' }];
   });
 
+  mock.onPost(/\/auth\/register/).reply(config => {
+    const data = parseData(config.data);
+    const { nombre, apellido, correo, password } = data;
+    if (!nombre || !correo || !password) {
+      return [400, { error: 'Faltan datos requeridos' }];
+    }
+    const exists = getUserByEmail(correo);
+    if (exists) {
+      return [409, { error: 'El correo ya está registrado' }];
+    }
+    const newUser = addUser({ nombre, apellido: apellido || '', correo, password });
+    return [201, {
+      token: 'fake-jwt-token-' + newUser.id,
+      refresh: 'fake-refresh-token',
+      userId: newUser.id,
+      user: newUser
+    }];
+  });
+
   mock.onGet(/\/auth\/profile/).reply(config => {
-    const authHeader = config.headers.Authorization || config.headers.authorization;
+    const authHeader = config.headers?.Authorization || config.headers?.authorization;
     if (!authHeader) return [401, { error: 'No token' }];
     
-    const userId = authHeader.split('-').pop(); // fake-jwt-token-{id}
+    const userId = getUserIdFromHeader(authHeader);
     const user = getUserById(userId);
     if (user) {
       return [200, user];
@@ -47,11 +86,14 @@ const setupMocks = (mock) => {
   });
 
   mock.onPut(/\/auth\/profile\/plan/).reply(config => {
-    const authHeader = config.headers.Authorization || config.headers.authorization;
-    const userId = authHeader.split('-').pop();
-    const { plan } = JSON.parse(config.data);
-    updateUserPlan(userId, plan);
-    return [200, { message: 'Plan actualizado' }];
+    const authHeader = config.headers?.Authorization || config.headers?.authorization;
+    const userId = getUserIdFromHeader(authHeader);
+    const { plan } = parseData(config.data);
+    if (userId) {
+      updateUserPlan(userId, plan);
+      return [200, { message: 'Plan actualizado' }];
+    }
+    return [401, { error: 'No autorizado' }];
   });
 
   // TEMAS
@@ -61,19 +103,19 @@ const setupMocks = (mock) => {
 
   // ACTIVIDADES (Docente)
   mock.onGet(/\/actividad\/historial/).reply(config => {
-    const authHeader = config.headers.Authorization || config.headers.authorization;
-    const userId = authHeader ? authHeader.split('-').pop() : 'usr-1';
+    const authHeader = config.headers?.Authorization || config.headers?.authorization;
+    const userId = getUserIdFromHeader(authHeader) || 'usr-1';
     const acts = getActividades().filter(a => a.usuarioId === userId).map(a => ({
       ...a,
       creadoEn: a.createdAt
     }));
-    return [200, acts];
+    return [200, { data: acts, total: acts.length, page: 1, limit: 10 }];
   });
 
   mock.onPost(/\/generar/).reply(config => {
-    const authHeader = config.headers.Authorization || config.headers.authorization;
-    const userId = authHeader ? authHeader.split('-').pop() : 'usr-1';
-    const body = JSON.parse(config.data);
+    const authHeader = config.headers?.Authorization || config.headers?.authorization;
+    const userId = getUserIdFromHeader(authHeader) || 'usr-1';
+    const body = parseData(config.data);
     
     const newActivity = {
       id: 'act-' + Date.now(),
@@ -153,7 +195,7 @@ const setupMocks = (mock) => {
     const act = getActivityByToken(token);
     
     if (act) {
-      const body = JSON.parse(config.data);
+      const body = parseData(config.data);
       addScore(act.id, body);
       return [200, { message: 'Score guardado' }];
     }

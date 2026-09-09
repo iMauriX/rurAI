@@ -88,6 +88,20 @@ export const getTemas = () => getDB().temas;
 export const getUserByEmail = (correo) => getUsuarios().find(u => u.correo === correo);
 export const getUserById = (id) => getUsuarios().find(u => u.id === id);
 
+export const addUser = (userData) => {
+  const db = getDB();
+  const newUserId = `usr-${db.usuarios.length + 1}`;
+  const newUser = {
+    id: newUserId,
+    ...userData,
+    plan: userData.plan || 'Free',
+    generacionesMes: 0
+  };
+  db.usuarios.push(newUser);
+  saveDB(db);
+  return newUser;
+};
+
 export const updateUserPlan = (id, plan) => {
   const db = getDB();
   const userIndex = db.usuarios.findIndex(u => u.id === id);

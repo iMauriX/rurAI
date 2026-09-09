@@ -104,8 +104,11 @@ const Dashboard = () => {
           api.get('/actividad/historial'),
           api.get('http://localhost:3000/api/v1/temas')
         ]);
-        setHistorial(historialRes.data.data);
-        setTemas(temasRes.data);
+        const items = Array.isArray(historialRes.data?.data) 
+          ? historialRes.data.data 
+          : (Array.isArray(historialRes.data) ? historialRes.data : []);
+        setHistorial(items);
+        setTemas(Array.isArray(temasRes.data) ? temasRes.data : (temasRes.data?.data || []));
       } catch (err) {
         console.error('Error fetching data', err);
       } finally {
@@ -157,8 +160,10 @@ const Dashboard = () => {
 
       setSuccessMsg(`¡Actividad generada! Enlace: ${window.location.origin}/play/${response.data.token}`);
 
-      const historialRes = await api.get('/actividad/historial');
-      setHistorial(historialRes.data.data);
+      const items = Array.isArray(historialRes.data?.data) 
+        ? historialRes.data.data 
+        : (Array.isArray(historialRes.data) ? historialRes.data : []);
+      setHistorial(items);
 
       // Update generation counts
       await fetchProfile();
@@ -494,7 +499,8 @@ const Dashboard = () => {
       }}>
         {/* Tab Dashboard (Upgraded with Rich Metrics & Charts) */}
         {activeTab === 'dashboard' && (() => {
-          const actividadesFiltradas = historial.filter(act => {
+          const list = Array.isArray(historial) ? historial : [];
+          const actividadesFiltradas = list.filter(act => {
             if (filtroArea !== 'todas') {
               const area = getActividadArea(act);
               if (area !== filtroArea) return false;
